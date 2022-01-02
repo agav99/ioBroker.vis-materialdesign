@@ -8,17 +8,13 @@
 vis.binds.materialdesign.list =
     function (el, data) {
         let widgetName = 'List';
-        let themeTriggerClass = '.materialdesign-widget.materialdesign-list'
 
         try {
             let $this = $(el);
 
-            myMdwHelper.subscribeThemesAtRuntimee(data, widgetName, themeTriggerClass, function () {
-                init();
-            });
+            myMdwHelper.subscribeThemesAtRuntime(data, widgetName);
 
-            function init() {
-
+            myMdwHelper.waitForOid(data.json_string_oid, data.wid, widgetName, function () {
                 let itemList = [];
                 let nonInteractive = '';
                 let jsonData = null;
@@ -44,6 +40,12 @@ vis.binds.materialdesign.list =
                     // json Object changed
                     let scrollTop = $this.scrollTop();
                     let scrollLeft = $this.scrollLeft();
+
+                    if (myMdwHelper.getBooleanFromData(data.scrollToTopOnChanges, false)) {
+                        scrollTop = 0;
+                        scrollLeft = 0;
+                    }
+
                     generateContent();
 
                     if (oidsNeedSubscribe) {
@@ -65,17 +67,29 @@ vis.binds.materialdesign.list =
                     oidsNeedSubscribe = false;
 
                     if (data.listItemDataMethod === 'jsonStringObject') {
-                        try {
-                            jsonData = JSON.parse(vis.states.attr(data.json_string_oid + '.val'));
+                        let val = vis.states.attr(data.json_string_oid + '.val');
+                        if (val && val !== null && val !== 'null') {
+                            try {
+                                jsonData = JSON.parse(val);
+                            } catch (err) {
+                                jsonData = [
+                                    {
+                                        text: `<font color=\"red\"><b>${_("Error in JSON string")}</b></font>`,
+                                        subText: `<label style="word-wrap: break-word; white-space: normal;">${err.message}</label>`
+                                    }
+                                ];
+                                console.error(`[IconList - ${data.wid}] cannot parse json string! value: '${val}' Error: ${err.message}`);
+                            }
+
                             countOfItems = jsonData.length - 1;
-                        } catch (err) {
+                        } else {
                             jsonData = [
                                 {
-                                    text: `<font color=\"red\"><b>${_("Error in JSON string")}</b></font>`,
-                                    subText: `<label style="word-wrap: break-word; white-space: normal;">${err.message}</label>`
+                                    text: `<font color=\"red\"><b>${_("datapoint '{0}' not exist!").replace('{0}', data.json_string_oid)}</b></font>`,
                                 }
                             ];
-                            console.error(`[List - ${data.wid}] cannot parse json string! Error: ${err.message}`);
+                            countOfItems = jsonData.length - 1;
+                            console.warn(`[IconList - ${data.wid}] ${_("datapoint '{0}' not exist!").replace('{0}', data.json_string_oid)}`);
                         }
                     } else {
                         countOfItems = data.countListItems;
@@ -200,11 +214,26 @@ vis.binds.materialdesign.list =
                         }
                     }
 
+                    let headerHeight = myMdwHelper.getNumberFromData(data.header_height, 60);
+                    let listHeader = myMdwHelper.getValueFromData(data.headers, undefined) ?
+                        `<div class="materialdesign-widget materialdesign-html-card materialdesign-list-header-container" style="height: ${headerHeight}px; position: relative; overflow: hidden; margin-bottom: -5px;">
+                        <div class="materialdesign-html-card-container mdc-card" 
+                            style="margin: 8px 3px 3px 3px; width: calc(100% - 6px); height: ${headerHeight + 5}px; display: flex; flex-direction: row; align-items: center;
+                                    padding: ${myMdwHelper.getNumberFromData(data.header_padding_top, 0)}px ${myMdwHelper.getNumberFromData(data.header_padding_right, 0)}px ${myMdwHelper.getNumberFromData(data.header_padding_bottom, 0)}px ${myMdwHelper.getNumberFromData(data.header_padding_left, 0)}px;
+                                    text-align: ${myMdwHelper.getValueFromData(data.alignment, "flex-start").replace('flex-', '')};
+                                    background: transparent;">
+                                    ${myMdwHelper.getIconElement(data.headerImage, 'auto', myMdwHelper.getValueFromData(data.headerImageHeight, '24px', '', 'px'), myMdwHelper.getValueFromData(data.headerImageColor, ''))}
+                                    <div class="materialdesign-list-header">${data.headers}</div>
+                        </div>
+                    </div>`
+                        : undefined;
+
                     if (!replace) {
                         if (data.listLayout === 'card' || data.listLayout === 'cardOutlined') {
                             let listLayout = data.listLayout === 'card' ? 'materialdesign-list-card' : 'materialdesign-list-card materialdesign-list-card--outlined';
 
                             $this.append(`
+                            ${listHeader ? listHeader : ''}
                             <div class="${listLayout}">
                                 <ul class="mdc-list ${nonInteractive} ${containerClass}" ${myMdwHelper.getBooleanFromData(data.showScrollbar, true) ? 'style="overflow-y: auto; overflow-x: hidden;"' : ''}>   
                                     ${widgetElement}
@@ -232,22 +261,23 @@ vis.binds.materialdesign.list =
 
                     let spaceBetweenImageAndLabel = myMdwHelper.getValueFromData(data.distanceBetweenTextAndImage, '', 'margin-right: ', 'px;');
 
-                    const mdcList = new mdc.list.MDCList(list);
+                    const mdcList = new mdc.list.MDCList($this.find(`.${containerClass}`).get(0));
                     if (mdcList) {
                         const mdcListAdapter = mdcList.getDefaultFoundation().adapter_;
                         const listItemRipples = mdcList.listElements.map((listItemEl) => new mdc.ripple.MDCRipple(listItemEl));
+
+
+                        $(document).on("mdwSubscribe", function (e, oids) {
+                            if (myMdwHelper.isLayoutRefreshNeeded(widgetName, data, oids, data.debug)) {
+                                setStyle();
+                            }
+                        });
 
                         vis.states.bind('vis-materialdesign.0.colors.darkTheme.val', function (e, newVal, oldVal) {
                             setStyle();
                         });
 
                         vis.states.bind('vis-materialdesign.0.lastchange.val', function (e, newVal, oldVal) {
-                            setStyle();
-                        });
-
-                        $(themeTriggerClass).on(`mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}`, function () {
-                            if (data.debug) console.log(`[${widgetName} - ${data.wid}] event received: 'mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}'`);
-                            // $(themeTriggerClass).off(`mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}`);
                             setStyle();
                         });
 
@@ -260,6 +290,11 @@ vis.binds.materialdesign.list =
                                 list.style.setProperty("--materialdesign-color-list-background", myMdwHelper.getValueFromData(data.listBackground, ''));
                             }
 
+                            $this.context.style.setProperty("--materialdesign-list-header-font-color", myMdwHelper.getValueFromData(data.headerTextColor, ''));
+                            $this.context.style.setProperty("--materialdesign-list-header-font-size", myMdwHelper.getStringFromNumberData(data.headerTextSize, 24, '', 'px'));
+                            $this.context.style.setProperty("--materialdesign-list-header-font-family", myMdwHelper.getValueFromData(data.headerFontFamily, 'inherit'));
+
+                            $this.find('.materialdesign-list-header-container .materialdesign-icon-image').css('color', myMdwHelper.getValueFromData(data.headerImageColor, ''));
 
                             list.style.setProperty("--materialdesign-color-list-item-background", myMdwHelper.getValueFromData(data.listItemBackground, ''));
                             list.style.setProperty("--materialdesign-color-list-item-hover", myMdwHelper.getValueFromData(data.colorListItemHover, ''));
@@ -290,6 +325,11 @@ vis.binds.materialdesign.list =
                             list.style.setProperty("--materialdesign-color-switch-off", myMdwHelper.getValueFromData(data.colorSwitchThumb, ''));
                             list.style.setProperty("--materialdesign-color-switch-track", myMdwHelper.getValueFromData(data.colorSwitchTrack, ''));
                             list.style.setProperty("--materialdesign-color-switch-off-hover", myMdwHelper.getValueFromData(data.colorSwitchHover, ''));
+
+                            let itemCount = (data.listType === 'switch' || data.listType === 'switch_readonly') ? $this.find('.mdc-switch').length : mdcList.listElements.length;
+                            for (var i = 0; i <= itemCount - 1; i++) {
+                                setItemStyle(i, data, jsonData);
+                            }
                         }
 
                         if (mdcListAdapter) {
@@ -297,10 +337,6 @@ vis.binds.materialdesign.list =
                                 mdcList.listen('MDCList:action', function (item) {
                                     let index = item.detail.index;
                                     let listItemObj = getListItemObj(index, data, jsonData);
-
-                                    if (data.listType !== 'text') {
-                                        myMdwHelper.vibrate(data.vibrateOnMobilDevices);
-                                    }
 
                                     if (data.listType === 'checkbox' || data.listType === 'switch') {
                                         let selectedValue = mdcListAdapter.isCheckboxCheckedAtIndex(index);
@@ -330,9 +366,20 @@ vis.binds.materialdesign.list =
                                 });
                             }
 
-                            let itemCount = (data.listType === 'switch' || data.listType === 'switch_readonly') ? $this.find('.mdc-switch').length : mdcList.listElements.length;
+                            $this.find('.mdc-list-item').on('tapstart', function (e) {
+                                if (data.listType !== 'text') {
+                                    myMdwHelper.hapticFeedback(data);
+                                }
+                            });
 
+                            let itemCount = (data.listType === 'switch' || data.listType === 'switch_readonly') ? $this.find('.mdc-switch').length : mdcList.listElements.length;
                             for (var i = 0; i <= itemCount - 1; i++) {
+                                setItemStyle(i, data, jsonData);
+                            }
+                        }
+
+                        function setItemStyle(i, data, jsonData) {
+                            try {
                                 let listItemObj = getListItemObj(i, data, jsonData);
 
                                 if (data.listType === 'checkbox' || data.listType === 'checkbox_readonly' || data.listType === 'switch' || data.listType === 'switch_readonly') {
@@ -379,20 +426,30 @@ vis.binds.materialdesign.list =
                                             setLayout(index, newVal, listItemObj);
                                         });
                                     });
-                                }
-                            }
-
-                            function setLayout(index, val, listItemObj) {
-                                let curListItem = $this.find(`div[id="listItem_${index}"]`);
-
-                                if (val === true) {
-                                    curListItem.css('background', myMdwHelper.getValueFromData(data.listItemBackgroundActive, ''));
-                                    myMdwHelper.changeListIconElement(curListItem, listItemObj.imageActive, 'auto', myMdwHelper.getValueFromData(data.listImageHeight, '', '', 'px !important;'), listItemObj.imageActiveColor, spaceBetweenImageAndLabel);
-
                                 } else {
-                                    curListItem.css('background', myMdwHelper.getValueFromData(data.listItemBackground, ''));
-                                    myMdwHelper.changeListIconElement(curListItem, listItemObj.image, 'auto', myMdwHelper.getValueFromData(data.listImageHeight, '', '', 'px !important;'), listItemObj.imageColor, spaceBetweenImageAndLabel);
+                                    setLayout(i, false, listItemObj);
                                 }
+                            } catch (ex) {
+                                console.error(`[${widgetName} - ${data.wid}] setItemStyle - item ${i}, error: ${ex.message}, stack: ${ex.stack}`);
+                            }
+                        }
+
+                        function setLayout(index, val, listItemObj) {
+                            let curListItem = $this.find(`div[id="listItem_${index}"]`);
+
+                            $this.find(`.mdc-list-group__subheader`).css('font-size', myMdwHelper.getStringFromNumberData(data.listItemHeaderTextSize, 'inherit', '', 'px'));
+                            $this.find(`.mdc-list-item__text`).css('font-size', myMdwHelper.getStringFromNumberData(data.listItemTextSize, 'inherit', '', 'px'));
+                            $this.find(`.mdc-list-item__primary-text`).css('font-size', myMdwHelper.getStringFromNumberData(data.listItemTextSize, 'inherit', '', 'px'));
+                            $this.find(`.mdc-list-item__secondary-text`).css('font-size', myMdwHelper.getStringFromNumberData(data.listItemSubTextSize, 'inherit', '', 'px'));
+                            $this.find(`.mdc-list-item__primary-text.materialdesign-list-item-text-right`).css('font-size', myMdwHelper.getStringFromNumberData(data.listItemTextRightSize, 'inherit', '', 'px'));
+                            $this.find(`.mdc-list-item__secondary-text.materialdesign-list-item-text-right`).css('font-size', myMdwHelper.getStringFromNumberData(data.listItemSubTextRightSize, 'inherit', '', 'px'));
+
+                            if (val === true) {
+                                curListItem.css('background', myMdwHelper.getValueFromData(data.listItemBackgroundActive, ''));
+                                myMdwHelper.changeListIconElement(curListItem, listItemObj.imageActive, 'auto', myMdwHelper.getValueFromData(data.listImageHeight, '', '', 'px !important;'), listItemObj.imageActiveColor, spaceBetweenImageAndLabel);
+                            } else {
+                                curListItem.css('background', myMdwHelper.getValueFromData(data.listItemBackground, ''));
+                                myMdwHelper.changeListIconElement(curListItem, listItemObj.image, 'auto', myMdwHelper.getValueFromData(data.listImageHeight, '', '', 'px !important;'), listItemObj.imageColor, spaceBetweenImageAndLabel);
                             }
                         }
                     }
@@ -439,7 +496,7 @@ vis.binds.materialdesign.list =
                         };
                     }
                 }
-            }
+            }, 100, data.debug);
         } catch (ex) {
             console.error(`[${widgetName} - ${data.wid}] error: ${ex.message}, stack: ${ex.stack}`);
         }

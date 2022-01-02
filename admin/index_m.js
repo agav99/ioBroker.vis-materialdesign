@@ -4,12 +4,16 @@ var myNamespace;
 
 let $progress;
 
+let adapterSettingsIsLoading = false;
+let errorMsgCollector;
+
 // This will be called by the admin adapter when the settings page loads
 async function load(settings, onChange) {
     // example: select elements with id=key and class=value and insert value
     if (!settings) return;
 
     myNamespace = `${adapter}.${instance}`;
+    adapterSettingsIsLoading = true;
 
     addVersionToAdapterTitle();
 
@@ -33,6 +37,16 @@ async function load(settings, onChange) {
 
     $progress = $('.progressContainer');
 
+
+    $(document).on("loadingFinished", function (e) {
+        $progress.hide();
+
+        adapterSettingsIsLoading = false;
+        if (errorMsgCollector) {
+            reportError(errorMsgCollector);
+        }
+    });
+
     createDatapoints(onChange);
     generateJavascriptInstancesDropDown(settings);
 
@@ -40,12 +54,11 @@ async function load(settings, onChange) {
 
     for (const themeType of themeTypesList) {
         await createTab(themeType, settings[themeType], [], settings, onChange);
-        $progress.hide();
     }
 
+    $(document).trigger("loadingFinished");
+
     eventsHandler(onChange);
-
-
 
     // reinitialize all the Materialize labels on the page if you are dynamically adding inputs:
     if (M) M.updateTextFields();
@@ -277,13 +290,13 @@ async function createTable(themeType, themeObject, themeDefaults, defaultButtons
                         <table class="table-values" id="${themeType}Table">
                             <thead>
                                 <tr>
+                                    <th style="width: 50px; text-align: center;" class="header" data-buttons="M"></th>
                                     <th data-name="widget" style="width: 10%;" class="translate" data-type="text">${_("Widget")}</th>                                    
                                     <th data-name="desc" style="width: auto;" class="translate" data-type="text">${_("description")}</th>
                                     ${themeType.includes('colors') ? '<th data-name="pickr" style="width: 30px;" data-style="text-align: center;" class="translate" data-type="text"></th>' : ''}
-                                    <th data-name="value" style="width: ${themeType === 'fontSizes' ? '65px' : '180px'};" data-style="text-align: ${themeType === 'fontSizes' ? 'center' : 'left'};" class="translate" data-type="${themeType === 'fontSizes' ? 'number' : 'text'}">${_(`${themeType}_table`)}</th>
+                                    <th data-name="value" style="width: ${themeType === 'fontSizes' ? '65px' : '220px'};" data-style="text-align: ${themeType === 'fontSizes' ? 'center' : 'left'};" class="translate" data-type="${themeType === 'fontSizes' ? 'number' : 'text'}">${_(`${themeType}_table`)}</th>
                                     <th style="width: 150px; text-align: center;" class="header" data-buttons="${defaultButtons.trim()}">${_(`${themeType}Default`)}</th>
-                                    <th data-name="id" style="width: 15%;" class="translate" data-type="text">${_("datapoint")}</th>
-                                    <th style="width: 50px; text-align: center;" class="header" data-buttons="M B"></th>
+                                    <th data-name="id" style="display: none;" class="translate" data-type="text">${_("datapoint")}</th>                                    
                                     <th data-name="defaultValue" style="display: none;" class="translate" data-type="text">${_(`${themeType}Default`)}</th>
                                 </tr>
                             </thead>
@@ -302,6 +315,7 @@ async function createTable(themeType, themeObject, themeDefaults, defaultButtons
 
         // defaultValue ausblenden
         $(`#${themeType}Table [data-name=defaultValue]`).closest('td').css('display', 'none');
+        $(`#${themeType}Table [data-name=id]`).closest('td').css('display', 'none');
 
 
         // check if filter is set
@@ -333,61 +347,60 @@ async function createTable(themeType, themeObject, themeDefaults, defaultButtons
             });
 
             btn.on('click', function () {
-                // apply default value to row
-                let rowNum = $(this).data('index');
-                let btnNum = $(this).data('command');
+                try {
+                    // apply default value to row
+                    let rowNum = $(this).data('index');
+                    let btnNum = $(this).data('command');
 
-                let inpuEl = $(`#${themeType}Table input[data-index=${rowNum}][data-name="value"]`);
+                    let inpuEl = $(`#${themeType}Table input[data-index=${rowNum}][data-name="value"]`);
 
+                    if (themeType.includes('colors')) {
+                        // We have to recreate the color picker
+                        let pickrEl = $(`#${themeType}Table tr[data-index=${rowNum}] .pickr`);
+                        pickrEl.empty();
+                        createColorPicker(pickrEl.get(0), themeDefaults[btnNum], themeDefaults, inpuEl, onChange);
+                    }
 
-                if (themeType.includes('colors')) {
-                    // We have to recreate the color picker
-                    let pickrEl = $(`#${themeType}Table tr[data-index=${rowNum}] .pickr`);
-                    pickrEl.empty();
-                    createColorPicker(pickrEl.get(0), themeDefaults[btnNum], themeDefaults, inpuEl, onChange);
+                    inpuEl.val(themeDefaults[btnNum]);
+                    setTableSelectedDefault(themeType, rowNum, btnNum);
+
+                    onChange();
+                } catch (err) {
+                    reportError(`[createTable - btn click] type: ${themeType} error: ${err.message}, stack: ${err.stack}`);
                 }
-
-                inpuEl.val(themeDefaults[btnNum]);
-                setTableSelectedDefault(themeType, rowNum, btnNum);
-
-                onChange();
             });
         }
-
-        // link copy buttons
-        let btnBindingLink = $(`#${themeType}Table [data-command="B"]`);
-        btnBindingLink.find('.material-icons').removeClass('material-icons').text('').addClass('mdi mdi-iobroker').css('font-size', '26px').css('font-weight', '100');
-        btnBindingLink.on('click', function () {
-            let rowNum = $(this).data('index');
-
-            let inputId = $(`#${themeType}Table input[data-index=${rowNum}][data-name="id"]`);
-
-            if (themeType.includes('colors')) {
-                clipboard.writeText(`{mode:${myNamespace}.colors.darkTheme;light:${myNamespace}.colors.${inputId.val().replace('dark.', 'light.')};dark:${myNamespace}.colors.${inputId.val().replace('light.', 'dark.')}; mode === "true" ? dark : light}`);
-
-                // Für Entwicklung Binding aufbereitet um in *.html zu verwenden
-                // clipboard.writeText(`{mode:${myNamespace}.colors.darkTheme;light:${myNamespace}.colors.${inputId.val().replace('dark.', 'light.')};dark:${myNamespace}.colors.${inputId.val().replace('light.', 'dark.')}; mode === "true" ? dark : light}`.replace(/;/g, '§').replace(/\"/g, '^'));                
-            } else {
-                clipboard.writeText(`{${myNamespace}.${themeType}.${inputId.val()}}`);
-            }
-
-            M.Toast.dismissAll();
-            M.toast({ html: _('Binding copied to clipboard'), displayLength: 1000, inDuration: 0, outDuration: 0, classes: 'rounded' });
-        });
 
         let btnMdwLink = $(`#${themeType}Table [data-command="M"]`);
         btnMdwLink.find('.material-icons').removeClass('material-icons').text('').addClass('mdi mdi-material-design').css('font-size', '26px').css('font-weight', '100');
         btnMdwLink.on('click', function () {
-            let rowNum = $(this).data('index');
+            try {
+                // let rowNum = $(this).data('index');
 
-            let inputId = $(`#${themeType}Table input[data-index=${rowNum}][data-name="id"]`);
+                // let inputId = $(`#${themeType}Table input[data-index=${rowNum}][data-name="id"]`);
 
-            clipboard.writeText(`#mdwTheme:${myNamespace}.${themeType}.${inputId.val().replace('light.', '').replace('dark.', '')}`);
+                // clipboard.writeText(`#mdwTheme:${myNamespace}.${themeType}.${inputId.val().replace('light.', '').replace('dark.', '')}`);
 
-            M.Toast.dismissAll();
-            M.toast({ html: _('Material Design Widget datapoint binding copied to clipboard'), displayLength: 1000, inDuration: 0, outDuration: 0, classes: 'rounded' });
+                let cssVar = "";
+                let rowNum = $(this).data('index');
+                let inputId = $(`#${themeType}Table input[data-index=${rowNum}][data-name="id"]`).val().replace('light.', '').replace('dark.', '').replace(/\./g, '-').replace(/_/g, '-');
+
+                if (themeType.includes('color')) {
+                    cssVar = `var(--materialdesign-widget-theme-color-${inputId})`;
+                } else if (themeType === 'fonts') {
+                    cssVar = `var(--materialdesign-widget-theme-font-${inputId})`;
+                } else {
+                    cssVar = `var(--materialdesign-widget-theme-font-size-${inputId})`;
+                }
+
+                clipboard.writeText(cssVar);
+
+                M.Toast.dismissAll();
+                M.toast({ html: _('Material Design Widget css variable {0} copied to clipboard').replace('{0}', `<br><b><i>${cssVar}</i></b><br>`), displayLength: 2000, inDuration: 0, outDuration: 0, classes: 'rounded' });
+            } catch (err) {
+                reportError(`[createTable - btnMdwLink click] type: ${themeType} error: ${err.message}, stack: ${err.stack}`);
+            }
         });
-
 
         $(`#${themeType}Table input[data-name=value]`).change(function () {
             // fires only on key enter or lost focus -> change colorPicker            
@@ -548,7 +561,7 @@ async function checkAllObjectsExistInSettings(themeType, themeObject, themeDefau
                 }
 
             } catch (err) {
-                reportError(`[checkAllObjectsExistInSettings] themeType: ${themeType}, objNr.: ${i}, error: ${err.message}, stack: ${err.stack}`);
+                reportError(`[checkAllObjectsExistInSettings] themeType: ${themeType}, objNr.: ${i}, object: ${JSON.stringify(jsonList[i])} error: ${err.message}, stack: ${err.stack}`);
             }
         }
 
@@ -571,28 +584,26 @@ function createDefaultElement(themeType, themeDefaults, index) {
                     <input type="${themeType === 'fontSizes' ? 'number' : 'text'}" class="value ${themeType}PickerInput" id="${themeType}${index}" value="${themeDefaults[index]}" ${themeType === 'fontSizes' ? 'style="width: 80px; text-align: center;"' : ''} />                
                     <div style="margin-left: 4px; margin-right: 4px; display: flex;">
                         <a class="btn-floating btn-small waves-effect waves-light" id="btn-mdw-${themeType}-${index}" style="width: 32px; height: 32px;"><i class="mdi mdi-material-design" style="font-size: 26px; font-weight: 100;"></i></a>
-                        <a class="btn-floating btn-small waves-effect waves-light" id="btn-binding-${themeType}-${index}" style="width: 32px; height: 32px; margin-left: 2px;"><i class="mdi mdi-iobroker" style="font-size: 26px; font-weight: 100;"></i></a>
                     </div>
                 </div>
             </div>`);
 
         $(`#btn-mdw-${themeType}-${index}`).on('click', function () {
 
-            clipboard.writeText(`#mdwTheme:${myNamespace}.${themeType}.default_${index}`);
+            let cssVar = '';
 
-            M.Toast.dismissAll();
-            M.toast({ html: _('Material Design Widget datapoint binding copied to clipboard'), displayLength: 700, inDuration: 0, outDuration: 0, classes: 'rounded' });
-        });
-
-        $(`#btn-binding-${themeType}-${index}`).on('click', function () {
-            if (themeType.includes('colors')) {
-                clipboard.writeText(`{mode:${myNamespace}.colors.darkTheme;light:${myNamespace}.colors.light.default_${index};dark:${myNamespace}.colors.dark.default_${index}; mode === "true" ? dark : light}`);
+            if (themeType.includes('color')) {
+                cssVar = `var(--materialdesign-widget-theme-color-default-${index})`;
+            } else if (themeType === 'fonts') {
+                cssVar = `var(--materialdesign-widget-theme-font-default-${index})`;
             } else {
-                clipboard.writeText(`{${myNamespace}.${themeType}.default_${index}}`);
+                cssVar = `var(--materialdesign-widget-theme-font-size-default-${index})`;
             }
 
+            clipboard.writeText(cssVar);
+
             M.Toast.dismissAll();
-            M.toast({ html: _('Binding copied to clipboard'), displayLength: 700, inDuration: 0, outDuration: 0, classes: 'rounded' });
+            M.toast({ html: _('Material Design Widget css variable {0} copied to clipboard').replace('{0}', `<br><b><i>${cssVar}</i></b><br>`), displayLength: 2000, inDuration: 0, outDuration: 0, classes: 'rounded' });
         });
 
     } catch (err) {
@@ -819,12 +830,12 @@ function save(callback) {
                 setStateString(`${myNamespace}.${themeType}.default_${i}`, `${_(`${themeType}Default`)} ${i}`, themeDefault);
             }
         });
-    }
 
-    for(var i = 0; i <= 3; i++){
-        setTimeout(function () {
-            setStateAsync(`${myNamespace}.lastchange`, new Date().getTime(), true);
-        }, 500 * i);
+        if (themeType === 'fontSizes') {
+            setTimeout(function () {
+                setStateAsync(`${myNamespace}.lastchange`, new Date().getTime(), true);
+            }, 1000);
+        }
     }
 
     callback(obj);
@@ -987,12 +998,21 @@ async function addVersionToAdapterTitle() {
     }
 }
 
+
 function reportError(msg) {
     console.error(msg);
-    showMessage(`
-    <div style="display: flex; align-items: center; flex-direction: row;">
-        <i class="medium material-icons" style="color: FireBrick;">error_outline</i>
-        <div style="margin-left: 12px; font-weight: 700; font-size: 16px;">An error has occurred.<br>Please report this to the developer</div>
-    </div>
-    <textarea class="materialdesign-settings-error-msg" readonly="readonly" style="background: #e9e9e9; margin-top: 20px; height: calc(100% - 160px);">${msg.replace(', error:', ',\nerror:').replace(', stack:', ',\nstack:')}</textarea>`, 'Error', undefined);
+
+    if (!adapterSettingsIsLoading) {
+        showMessage(`<div style="display: flex; align-items: center; flex-direction: row;">
+                        <i class="medium material-icons" style="color: FireBrick;">error_outline</i>
+                        <div style="margin-left: 12px; font-weight: 700; font-size: 16px;">An error has occurred.<br>Please report this to the developer</div>
+                    </div>
+                    <textarea class="materialdesign-settings-error-msg" readonly="readonly" style="background: #e9e9e9; margin-top: 20px; height: calc(100% - 160px);">${msg.replace(', error:', ',\nerror:').replace(', stack:', ',\nstack:')}</textarea>`, 'Error', undefined);
+    } else {
+        if (!errorMsgCollector) {
+            errorMsgCollector = msg;
+        } else {
+            errorMsgCollector = errorMsgCollector + '\n' + msg;
+        }
+    }
 }

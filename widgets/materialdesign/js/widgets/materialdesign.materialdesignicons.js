@@ -8,37 +8,31 @@
 vis.binds.materialdesign.materialdesignicons = {
     initialize: function (el, data) {
         let widgetName = 'MaterialDesignIcon';
-        let themeTriggerClass = '.materialdesign-widget.materialdesign-icon'
 
         try {
             let $this = $(el);
 
-            myMdwHelper.subscribeThemesAtRuntimee(data, widgetName, themeTriggerClass, function () {
-                init();
+            myMdwHelper.subscribeThemesAtRuntime(data, widgetName);
+
+            $this.append(myMdwHelper.getIconElement(myMdwHelper.getValueFromData(data.mdwIcon, 'material-design'), 'auto', myMdwHelper.getNumberFromData(data.mdwIconSize, 50) + 'px', myMdwHelper.getValueFromData(data.mdwIconColor, '#44739e')));
+
+            $(document).on("mdwSubscribe", function (e, oids) {
+                if (myMdwHelper.isLayoutRefreshNeeded(widgetName, data, oids, data.debug)) {
+                    setLayout();
+                }
             });
 
-            function init() {
-
-                $this.append(myMdwHelper.getIconElement(myMdwHelper.getValueFromData(data.mdwIcon, 'material-design'), 'auto', myMdwHelper.getNumberFromData(data.mdwIconSize, 50) + 'px', myMdwHelper.getValueFromData(data.mdwIconColor, '#44739e')));
-
-                vis.states.bind('vis-materialdesign.0.colors.darkTheme.val', function (e, newVal, oldVal) {
-                    setLayout();
-                });
-
-                vis.states.bind('vis-materialdesign.0.lastchange.val', function (e, newVal, oldVal) {
-                    setLayout();
-                });
-
-                $(themeTriggerClass).on(`mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}`, function () {
-                    if (data.debug) console.log(`[${widgetName} - ${data.wid}] event received: 'mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}'`);
-                    // $(themeTriggerClass).off(`mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}`);
-                    setLayout();
-                });
-
+            vis.states.bind('vis-materialdesign.0.colors.darkTheme.val', function (e, newVal, oldVal) {
                 setLayout();
-                function setLayout() {
-                    $this.find('.materialdesign-icon-image').css('color', myMdwHelper.getValueFromData(data.mdwIconColor, '#44739e'));
-                }
+            });
+
+            vis.states.bind('vis-materialdesign.0.lastchange.val', function (e, newVal, oldVal) {
+                setLayout();
+            });
+
+            setLayout();
+            function setLayout() {
+                $this.find('.materialdesign-icon-image').css('color', myMdwHelper.getValueFromData(data.mdwIconColor, '#44739e'));
             }
         } catch (ex) {
             console.error(`[${widgetName} - ${data.wid}] initialize: error: ${ex.message}, stack: ${ex.stack}`);
@@ -6051,6 +6045,7 @@ vis.binds.materialdesign.materialdesignicons = {
 
 $.initialize(".materialdesign-materialdesignicons-html-element", function () {
     let $this = $(this);
+    let debug = myMdwHelper.getBooleanFromData($this.attr('mdw-debug'), false);
     let parentId = 'unknown';
     let logPrefix = `[MaterialDesignIcon HTML Element - ${parentId.replace('w', 'p')}]`;
 
@@ -6060,7 +6055,7 @@ $.initialize(".materialdesign-materialdesignicons-html-element", function () {
         parentId = myMdwHelper.getHtmlParentId($this);
         logPrefix = `[MaterialDesignIcon HTML Element - ${parentId.replace('w', 'p')}]`;
 
-        console.log(`${logPrefix} initialize html element`);
+        if (debug) console.log(`${logPrefix} initialize html element`);
 
         myMdwHelper.extractHtmlWidgetData($this,
             vis.binds.materialdesign.materialdesignicons.getDataFromJson({}, parentId),

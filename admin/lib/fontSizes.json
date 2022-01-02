@@ -150,6 +150,12 @@
         "widget": "Dialog, Dialog iFrame"
     },
     {
+        "id": "icon_list.header",
+        "desc": "headerTextSize",
+        "defaultValue": 4,
+        "widget": "Icon List"
+    },
+    {
         "id": "icon_list.text",
         "desc": "labelFontSize",
         "defaultValue": 3,
@@ -215,6 +221,12 @@
         "defaultValue": 2,
         "widget": "Select, Autocomplete"
     },
+    {
+        "id": "list.header_main",
+        "desc": "headerTextSize",
+        "defaultValue": 4,
+        "widget": "List"
+    },    
     {
         "id": "list.header",
         "desc": "listItemHeaderTextSize",
@@ -335,9 +347,6 @@
         "defaultValue": 2,
         "widget": "Value"
     },
-
-
-    
     {
         "id": "scripts.adapterStatus.title",
         "desc": "title text size",
@@ -362,7 +371,6 @@
         "defaultValue": 2,
         "widget": "AdapterStatus [Script]"
     },
-
     {
         "id": "scripts.adapterStatus.icons.upgradeable",
         "desc": "upgradeable icon size",

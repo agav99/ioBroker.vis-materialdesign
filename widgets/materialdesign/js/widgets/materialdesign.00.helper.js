@@ -6,25 +6,53 @@
 "use strict";
 
 vis.binds.materialdesign.helper = {
-    vibrate: function (duration) {
+    hapticFeedback: function (data) {
         try {
-            if ("vibrate" in navigator) {
-                window.navigator.vibrate(duration);
+            if (vibrateActive) {
+                window.navigator.vibrate(data.vibrateOnMobilDevices);
+            }
+
+            if (soundObj !== null && data.clickSoundPlay) {
+                soundObj.volume = myMdwHelper.getNumberFromData(data.clickSoundVolume, 0.5);
+                soundObj.play();
             }
         } catch (ex) {
             console.error(`vibrate [${data.wid}]: error: ${ex.message}, stack: ${ex.stack}`);
         }
     },
+    waitForOid: function (oid, wid, widgetName, callBack, counter = 0, debug = false) {
+        if (oid === undefined || oid === null) {
+            if (debug) console.warn(`[${widgetName} ${wid}] [waitForOid] oid is '${oid}'`);
+            callBack();
+            return;
+        }
+
+        if (counter < 2000) {
+            setTimeout(function () {
+                let val = vis.states.attr(oid + '.val');
+                if (val !== undefined && val !== 'undefined' && val !== null && val !== 'null') {
+                    if (debug) console.log(`[${widgetName} ${wid}] [waitForOid] it took ${counter}ms to wait for the value '${val}' of oid '${oid}'`);
+                    callBack(val);
+                } else {
+                    if (debug) console.warn(`[${widgetName} ${wid}] [waitForOid] wait for value of oid '${oid}'`);
+                    counter++
+                    vis.binds.materialdesign.helper.waitForOid(oid, wid, widgetName, callBack, counter, debug);
+                }
+            }, 1)
+        } else {
+            console.warn(`[${widgetName} ${wid}] [waitForOid] stop waiting for value of oid '${oid}' after ${counter} retries`);
+            callBack();
+        }
+    },
     waitForVisConnected: function (callBack, counter = 0, debug = false) {
         if (counter < 500) {
-
             setTimeout(function () {
                 if (vis.conn && vis.conn.getIsConnected()) {
                     callBack();
                 } else {
                     if (debug) console.log(`[waitForVisConnected] wait for vis connection`);
                     counter++
-                    vis.binds.materialdesign.helper.waitForVisConnected(callBack, counter);
+                    vis.binds.materialdesign.helper.waitForVisConnected(callBack, counter, debug);
                 }
             }, 1)
         } else {
@@ -41,7 +69,7 @@ vis.binds.materialdesign.helper = {
                 } else {
                     if (debug) console.log(`[waitForViews] wait for views`);
                     counter++
-                    vis.binds.materialdesign.helper.waitForViews(callBack, counter);
+                    vis.binds.materialdesign.helper.waitForViews(callBack, counter, debug);
                 }
             }, 1)
         } else {
@@ -58,7 +86,7 @@ vis.binds.materialdesign.helper = {
                 } else {
                     if (debug) console.log(`[waitForWidgets] wait for widgets`);
                     counter++
-                    vis.binds.materialdesign.helper.waitForWidgets(callBack, counter);
+                    vis.binds.materialdesign.helper.waitForWidgets(callBack, counter, debug);
                 }
             }, 1)
         } else {
@@ -67,19 +95,21 @@ vis.binds.materialdesign.helper = {
         }
     },
     waitForElement: function (parent, elementPath, wid, widgetName, callBack, counter = 0, debug = false) {
-        if (counter < 100) {
+        if (counter < 500) {
 
             setTimeout(function () {
-                if (parent.find(elementPath).length) {
-                    callBack();
+                let element = parent.find(elementPath);
+                if (element.length > 0) {
+                    if (debug) console.log(`[${widgetName} ${wid}] [waitForElement] it took ${counter}ms to wait for the element '${elementPath}'`);
+                    callBack(element);
                 } else {
-                    if (debug) console.log(`[${widgetName} ${wid}] wait for elements`);
+                    if (debug) console.log(`[${widgetName} ${wid}] [waitForElement] wait for element '${elementPath}'`);
                     counter++
-                    vis.binds.materialdesign.helper.waitForElement(parent, elementPath, wid, widgetName, callBack, counter);
+                    vis.binds.materialdesign.helper.waitForElement(parent, elementPath, wid, widgetName, callBack, counter, debug);
                 }
-            }, 50)
+            }, 1);
         } else {
-            console.warn(`[${widgetName} ${wid}] stop waiting after ${counter} retries`);
+            console.warn(`[${widgetName} ${wid}] [waitForElement] stop waiting after ${counter} retries`);
             callBack();
         }
     },
@@ -93,7 +123,7 @@ vis.binds.materialdesign.helper = {
                 } else {
                     if (debug) console.log(`[${widgetName} ${wid}] wait for real width`);
                     counter++
-                    vis.binds.materialdesign.helper.waitForRealWidth(element, wid, widgetName, callBack, counter);
+                    vis.binds.materialdesign.helper.waitForRealWidth(element, wid, widgetName, callBack, counter, debug);
                 }
             }, 50);
         } else {
@@ -111,7 +141,7 @@ vis.binds.materialdesign.helper = {
                 } else {
                     if (debug) console.log(`[${widgetName} ${wid}] wait for real height`);
                     counter++
-                    vis.binds.materialdesign.helper.waitForRealHeight(element, wid, widgetName, callBack, counter);
+                    vis.binds.materialdesign.helper.waitForRealHeight(element, wid, widgetName, callBack, counter, debug);
                 }
             }, 50);
         } else {
@@ -202,7 +232,9 @@ vis.binds.materialdesign.helper = {
     getNumberFromData: function (dataValue, nullValue) {
         try {
             if (dataValue === undefined || dataValue === null || dataValue === '' || isNaN(dataValue)) {
-                if (dataValue && dataValue !== null && dataValue.toString().startsWith('#mdwTheme:')) {
+                if (dataValue && dataValue !== null && dataValue.toString().startsWith('var(')) {
+                    return dataValue;
+                } else if (dataValue && dataValue !== null && dataValue.toString().startsWith('#mdwTheme:')) {
                     let id = dataValue.replace('#mdwTheme:', '');
                     let val = vis.states.attr(id + '.val');
 
@@ -227,7 +259,9 @@ vis.binds.materialdesign.helper = {
             if (dataValue === undefined || dataValue === 'undefined' || dataValue === null || dataValue === 'null' || dataValue === '') {
                 return nullValue
             } else {
-                if (dataValue && dataValue !== null && dataValue.toString().startsWith('#mdwTheme:')) {
+                if (dataValue && dataValue !== null && dataValue.toString().startsWith('var(')) {
+                    return dataValue;
+                } else if (dataValue && dataValue !== null && dataValue.toString().startsWith('#mdwTheme:')) {
                     let id = dataValue.replace('#mdwTheme:', '');
                     let val = vis.states.attr(id + '.val');
 
@@ -278,12 +312,13 @@ vis.binds.materialdesign.helper = {
                 return { class: `mdc-typography--${fontSize}`, style: '' };
             } else if (!isNaN(fontSize)) {
                 // number only
-                return { class: ``, style: `font-size: ${fontSize}px;` };
+                return { class: ``, style: `font-size: ${myMdwHelper.getStringFromNumberData(fontSize, 'inherit', '', 'px')};` };
             } else {
-                return { class: ``, style: `font-size: ${fontSize};` };
+                return { class: ``, style: `font-size: ${myMdwHelper.getStringFromNumberData(fontSize, 'inherit', '', 'px')};` };
             }
         } else {
             return { class: '', style: '' };
+
         }
     },
     getListItemHeader: function (text, fontSize) {
@@ -319,18 +354,21 @@ vis.binds.materialdesign.helper = {
         return '';
     },
 
-    getListItem: function (layout, itemIndex, backdropImage, hasSubItems, isSubItem = false, style = '', dataOid = '', role = '', dataValue = '', isDisabled = false, index = undefined) {
+    getListItem: function (layout, itemIndex, backdropImage, hasSubItems, isSubItem = false, style = '', dataOid = '', role = '', dataValue = '', isDisabled = false, index = undefined, parentIndex = undefined, setValueOnMenuToggleClick = false, topAppBarUserId = undefined) {
         if (layout === 'standard') {
             // Layout: Standard
             return `<div 
                         class="mdc-list-item${(isSubItem) ? ' mdc-sub-list-item isSubItem' : ''}${(itemIndex === 0) ? ' mdc-list-item--activated' : ''}${(hasSubItems) ? ' hasSubItems' : ''}${isDisabled ? ' mdc-list-item--disabled' : ''}" 
                         tabindex="${(itemIndex === 0) ? '0' : '-1'}" 
                         id="listItem_${itemIndex}"
+                        ${topAppBarUserId ? `menuId="${topAppBarUserId}"` : ''}                        
                         ${index || index === 0 ? `index="${index}"` : ''}
+                        ${parentIndex || parentIndex === 0 ? `parentIndex="${parentIndex}"` : ''}
                         style="${style}"
                         data-value="${dataValue}" 
                         ${dataOid} 
                         ${role}
+                        ${hasSubItems ? `set-value-on-menu-toggle="${setValueOnMenuToggleClick}"` : ''}                        
                     >`
         } else {
             // Layout: Backdrop
@@ -338,8 +376,14 @@ vis.binds.materialdesign.helper = {
                         class="mdc-list-item${(isSubItem) ? ' mdc-sub-list-item isSubItem' : ''}${(itemIndex === 0) ? ' mdc-list-item--activated' : ''} mdc-card__media${(hasSubItems) ? ' hasSubItems' : ''}${isDisabled ? ' mdc-list-item--disabled' : ''}" 
                         tabindex="${(itemIndex === 0) ? '0' : '-1'}"
                         id="listItem_${itemIndex}"
+                        ${topAppBarUserId ? `menuId="${topAppBarUserId}"` : ''}
                         ${index || index === 0 ? `index="${index}"` : ''}
+                        ${parentIndex || parentIndex === 0 ? `parentIndex="${parentIndex}"` : ''}
                         style="background-image: url(${backdropImage}); align-items: flex-end; padding: 0px;${style}"
+                        data-value="${dataValue}" 
+                        ${dataOid} 
+                        ${role}
+                        ${hasSubItems ? `set-value-on-menu-toggle="${setValueOnMenuToggleClick}"` : ''}
                     >`
         }
     },
@@ -397,13 +441,16 @@ vis.binds.materialdesign.helper = {
         let icon = myMdwHelper.getValueFromData(iconData, null);
         let color = myMdwHelper.getValueFromData(iconColor, '');
 
+        
+
         if (icon !== null) {
             if (myMdwHelper.getAllowedImageFileExtensions().some(el => icon.includes(el))) {
                 // is image
+
                 return `<img 
                         class="${className}"
                         src="${icon}" 
-                        style="width: ${width}; height: ${height}; ${style};" />`;
+                        style="width: ${width}; height: ${height}; ${style}; ${icon.endsWith('.svg') ? `fill:${color};` : ''}" ${icon.endsWith('.svg') ? `onload="SVGInject(this)"` : ''} />`;
             } else {
                 // is material-icons
 
@@ -434,12 +481,16 @@ vis.binds.materialdesign.helper = {
                 // is image
                 if (element.is('img')) {
                     element.attr('src', icon);
+
+                    if (icon.endsWith('.svg')) {
+                        element.attr('onload', 'SVGInject(this)').css('fill', color);
+                    }
                 } else {
                     // previous image is material-icon
                     element.replaceWith(`<img 
                                             class="${className}"
                                             src="${icon}" 
-                                            style="width: ${width}; height: ${height}; ${style};" />`);
+                                            style="width: ${width}; height: ${height}; ${style}; ${icon.endsWith('.svg') ? `fill:${color};` : ''}" ${icon.endsWith('.svg') ? `onload="SVGInject(this)"` : ''} />`);
                 }
             } else {
                 // is material-icons
@@ -452,85 +503,16 @@ vis.binds.materialdesign.helper = {
         myMdwHelper.changeIconElement(parentElement, iconData, width, height, iconColor, `padding-top: 8px; padding-bottom: 8px;${style}`, 'mdc-list-item__graphic');
     },
     getAllowedImageFileExtensions: function () {
-        return ['.gif', '.png', '.bmp', '.jpg', '.jpeg', '.tif', '.svg', 'http://', 'https://'];
+        return ['.gif', '.png', '.bmp', '.jpg', '.jpeg', '.tif', '.svg', 'http://', 'https://', ';base64,'];
     },
     getVisibility: function (val, visibilityOid, visibilityCond, visibilityVal) {
-        var oid = visibilityOid;
-        var condition = visibilityCond;
-        if (oid) {
-            if (val === undefined || val === null) {
-                val = vis.states.attr(oid + '.val');
-            }
-            if (val === undefined || val === null) {
-                return (condition === 'not exist');
-            }
-
-            var value = visibilityVal;
-
-            if (!condition || value === undefined || value === null) {
-                return (condition === 'not exist');
-            }
-
-            if (val === 'null' && condition !== 'exist' && condition !== 'not exist') {
-                return false;
-            }
-
-            var t = typeof val;
-            if (t === 'boolean' || val === 'false' || val === 'true') {
-                value = value === 'true' || value === true || value === 1 || value === '1';
-            } else
-                if (t === 'number') {
-                    value = parseFloat(value);
-                } else
-                    if (t === 'object') {
-                        val = JSON.stringify(val);
-                    }
-
-            // Take care: return true if widget is hidden!
-            switch (condition) {
-                case '==':
-                    value = value.toString();
-                    val = val.toString();
-                    if (val === '1') val = 'true';
-                    if (value === '1') value = 'true';
-                    if (val === '0') val = 'false';
-                    if (value === '0') value = 'false';
-                    return value !== val;
-                case '!=':
-                    value = value.toString();
-                    val = val.toString();
-                    if (val === '1') val = 'true';
-                    if (value === '1') value = 'true';
-                    if (val === '0') val = 'false';
-                    if (value === '0') value = 'false';
-                    return value === val;
-                case '>=':
-                    return val < value;
-                case '<=':
-                    return val > value;
-                case '>':
-                    return val <= value;
-                case '<':
-                    return val >= value;
-                case 'consist':
-                    value = value.toString();
-                    val = val.toString();
-                    return (val.toString().indexOf(value) === -1);
-                case 'not consist':
-                    value = value.toString();
-                    val = val.toString();
-                    return (val.toString().indexOf(value) !== -1);
-                case 'exist':
-                    return val === 'null';
-                case 'not exist':
-                    return val !== 'null';
-                default:
-                    console.log('Unknown visibility condition: ' + condition);
-                    return false;
-            }
-        } else {
-            return (condition === 'not exist');
+        let widgetData = {
+            "visibility-oid": visibilityOid,
+            "visibility-cond": visibilityCond,
+            "visibility-val": visibilityVal
         }
+
+        return vis.isWidgetHidden(undefined, undefined, val, widgetData);
     },
     getViewOfWidget(wid) {
         for (var view in vis.views) {
@@ -544,16 +526,31 @@ vis.binds.materialdesign.helper = {
 
         if (oid !== undefined) {
             // Check if Oid is subscribed and put to vis subscribing object
-            if (!vis.editMode && (!vis.subscribing.byViews[view].includes(oid) || force)) {
-                vis.subscribing.byViews[view].push(oid)
+            if (!vis.editMode) {
 
-                if (!isBinding) {
-                    if (debug) console.log(`[oidNeedSubscribe] ${widgetName} (${wid}): oid '${oid}' need subscribe`);
-                } else {
-                    if (debug) console.log(`[oidNeedSubscribe] ${widgetName} (${wid}): binding '${oid}' need subscribe`);
+                if (!vis.subscribing.byViews[view].includes(oid)) {
+                    vis.subscribing.byViews[view].push(oid);
+
+                    if (!isBinding) {
+                        if (debug) console.log(`[oidNeedSubscribe] ${widgetName} (${wid}): oid '${oid}' need subscribe (view)`);
+                    } else {
+                        if (debug) console.log(`[oidNeedSubscribe] ${widgetName} (${wid}): binding '${oid}' need subscribe ${force ? '(force: true)' : ''}`);
+                    }
+
+                    return true;
                 }
 
-                return true;
+                if (!vis.subscribing.IDs.includes(oid)) {
+                    vis.subscribing.byViews[view].push(oid);
+
+                    if (!isBinding) {
+                        if (debug) console.log(`[oidNeedSubscribe] ${widgetName} (${wid}): oid '${oid}' need subscribe (ID)`);
+                    } else {
+                        if (debug) console.log(`[oidNeedSubscribe] ${widgetName} (${wid}): binding '${oid}' need subscribe (ID)`);
+                    }
+
+                    return true;
+                }
             }
         }
 
@@ -603,55 +600,66 @@ vis.binds.materialdesign.helper = {
 
         return result;
     },
-    subscribeThemesAtRuntimee(data, widgetName, triggerClass, callBack) {
-        let oidsNeedSubscribe = false;
+    subscribeThemesAtRuntime(data, widgetName) {
+        try {
+            let oidsNeedSubscribe = false;
 
-        for (const [key, value] of Object.entries(data)) {
-            if (value.toString().startsWith('#mdwTheme:')) {
-                let id = value.replace('#mdwTheme:', '');
-                oidsNeedSubscribe = needsSubscribe(id, oidsNeedSubscribe);
-            } else {
-                if (value.toString().includes('#mdwTheme:')) {
-                    let extractIds = value.match(/#mdwTheme:*[^*?"'`´,;:<>#/{}ß\[\]\s]*/g);
+            oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe('vis-materialdesign.0.lastchange', data.wid, widgetName, oidsNeedSubscribe, false, data.debug);
+            oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe('vis-materialdesign.0.colors.darkTheme', data.wid, widgetName, oidsNeedSubscribe, false, data.debug);
 
-                    if (extractIds && extractIds !== null && extractIds.length > 0) {
-                        for (const str of extractIds) {
-                            let id = str.replace('#mdwTheme:', '');
-                            oidsNeedSubscribe = needsSubscribe(id, oidsNeedSubscribe);
+            for (const [key, value] of Object.entries(data)) {
+                if (value) {
+                    if (value.toString().startsWith('#mdwTheme:')) {
+                        let id = value.replace('#mdwTheme:', '');
+                        oidsNeedSubscribe = needsSubscribe(id, oidsNeedSubscribe);
+                    } else {
+                        if (value.toString().includes('#mdwTheme:') || key === 'json_string_oid' || key === 'oid') {
+                            let extractIds;
+
+                            if (key !== 'json_string_oid' && key !== 'oid') {
+                                extractIds = value.match(/#mdwTheme:*[^*?"'`´,;:<>#\/{}\\ß\[\]\s]*/g);
+                            } else {
+                                // oid can include json string which can includes theme attributes
+                                let val = vis.states.attr(value + '.val');
+                                if (val && val !== null && val.toString().includes('#mdwTheme:')) {
+                                    extractIds = val.match(/#mdwTheme:*[^*?"'`´,;:<>#\/{}\\ß\[\]\s]*/g);
+                                }
+                            }
+
+                            if (extractIds && extractIds !== null && extractIds.length > 0) {
+                                for (const str of extractIds) {
+                                    let id = str.replace('#mdwTheme:', '');
+                                    oidsNeedSubscribe = needsSubscribe(id, oidsNeedSubscribe);
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
 
-        oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe('vis-materialdesign.0.lastchange', data.wid, widgetName, oidsNeedSubscribe, false, false);
-        oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe('vis-materialdesign.0.colors.darkTheme', data.wid, widgetName, oidsNeedSubscribe, false, false);
-
-        if (oidsNeedSubscribe) {
-            myMdwHelper.subscribeStatesAtRuntime(data.wid, widgetName, function () {
-                // if other widgets use same states -> inform that state is subscribed, because widget can be created before subscribing is finished 
-                let eventName = widgetName.replace(/ /g, '_');
-                if (data.debug) console.log(`[subscribeThemesAtRuntimee - ${data.wid}] fire event: mdwTheme_subscribe_${eventName}`);
-                $(triggerClass).trigger(`mdwTheme_subscribe_${eventName}`);
-
-                callBack();
-            }, data.debug);
-        } else {
-            callBack();
-        }
-
-        function needsSubscribe(id, oidsNeedSubscribe) {
-            if (id.includes('vis-materialdesign.0.colors.')) {
-                oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe(id.replace('vis-materialdesign.0.colors.', 'vis-materialdesign.0.colors.light.'), data.wid, widgetName, oidsNeedSubscribe, false, data.debug);
-                oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe(id.replace('vis-materialdesign.0.colors.', 'vis-materialdesign.0.colors.dark.'), data.wid, widgetName, oidsNeedSubscribe, false, data.debug);
-            } else {
-                oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe(id, data.wid, widgetName, oidsNeedSubscribe, false, data.debug);
+            if (oidsNeedSubscribe) {
+                myMdwHelper.subscribeStatesAtRuntime(data.wid, widgetName, undefined, data.debug);
             }
 
-            return oidsNeedSubscribe;
+            function needsSubscribe(id, oidsNeedSubscribe) {
+                if (id.includes('vis-materialdesign.0.colors.')) {
+                    let idLight = id.replace('vis-materialdesign.0.colors.', 'vis-materialdesign.0.colors.light.');
+                    oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe(idLight, data.wid, widgetName, oidsNeedSubscribe, false, data.debug);
+
+                    let idDark = id.replace('vis-materialdesign.0.colors.', 'vis-materialdesign.0.colors.dark.');
+                    oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe(idDark, data.wid, widgetName, oidsNeedSubscribe, false, data.debug);
+                } else {
+                    oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe(id, data.wid, widgetName, oidsNeedSubscribe, false, data.debug);
+                }
+
+                return oidsNeedSubscribe;
+            }
+        } catch (ex) {
+            console.error(`[${widgetName} - ${data.wid}] subscribeThemesAtRuntime: error: ${ex.message}, stack: ${ex.stack}`);
+            return false;
         }
     },
-    subscribeStatesAtRuntime(wid, widgetName, callback, debug = false, force = false) {
+    subscribeStatesAtRuntime(wid, widgetName, callback, debug = false) {
         // modified from vis.js -> https://github.com/ioBroker/ioBroker.vis/blob/2a08ee6da626a65b9d0b42b8679563e74272bfc6/www/js/vis.js#L2710
 
         if (debug) console.log(`[subscribeStatesAtRuntime] ${widgetName} (${wid}) subscribe states at runtime`);
@@ -674,28 +682,76 @@ vis.binds.materialdesign.helper = {
         for (var i = 0; i < vis.subscribing.byViews[view].length; i++) {
             let oid = vis.subscribing.byViews[view][i];
 
-            if (vis.subscribing.active.indexOf(oid) === -1 || !vis.states.attr(oid + '.val') || vis.states.attr(oid + '.val') === null || force) {
+            if (!vis.subscribing.active.includes(oid)) {
                 vis.subscribing.active.push(oid);
 
                 oids.push(oid);
 
-                if (debug) console.log(`[subscribeStatesAtRuntime] ${widgetName} (${wid}): '${oid}' subscribed`);
+                if (debug) console.log(`[subscribeStatesAtRuntime] ${widgetName} (${wid}): '${oid}' subscribed (View)`);
+            }
+
+            if (!vis.subscribing.IDs.includes(oid)) {
+                vis.subscribing.IDs.push(oid);
+                if (debug) console.log(`[subscribeStatesAtRuntime] ${widgetName} (${wid}): '${oid}' add to subscribing.IDs`);
             }
         }
 
-        if (oids.length) {
+        if (oids.length > 0) {
             var that = vis;
-            console.debug(`[subscribeStatesAtRuntime] ${widgetName} (${wid}): Request ${oids.length} states.`);
+            if (debug) console.log(`[subscribeStatesAtRuntime] ${widgetName} (${wid}): Request ${oids.length} states.`);
             vis.conn._socket.emit('getStates', oids, function (error, data) {
                 if (error) that.showError(error);
 
                 that.updateStates(data);
-                that.conn.subscribe(oids);
+                that.conn.subscribe(oids, function () {
+
+                    if (data && Object.keys(data).length > 0) {
+                        if (debug) console.log(`[subscribeStatesAtRuntime] ${widgetName} (${wid}): inform widgets ${Object.keys(data).length} states subscribed`);
+
+                        $(document).trigger("mdwSubscribe", data);
+                    }
+
+                    // vis.setValue('vis-materialdesign.0.lastchange', new Date().getTime());
+                });
+
                 if (callback) callback();
             });
         } else {
             if (callback) callback();
         }
+    },
+    isLayoutRefreshNeeded(widgetName, data, oids, debug) {
+        let subscribedOids = Object.keys(myUnderscore.pick(oids, myUnderscore.identity));
+
+        if (debug) console.log(`[isLayoutRefreshNeeded] ${widgetName} (${data.wid}): subscribed oids: ${JSON.stringify(subscribedOids)}`);
+
+        for (const key of Object.keys(data)) {
+            if (typeof (data[key]) === 'string') {
+                if (subscribedOids.includes(data[key].replace('#mdwTheme:', ''))) {
+                    if (debug) console.log(`[isLayoutRefreshNeeded] ${widgetName} (${data.wid}): refresh needed!`);
+                    return true;
+                }
+
+                if (data[key].includes('#mdwTheme:')) {
+                    let extractIds = data[key].match(/#mdwTheme:*[^*?"'`´,;:<>#\/{}\\ß\[\]\s]*/g);
+
+                    if (extractIds && extractIds !== null && extractIds.length > 0) {
+                        for (const str of extractIds) {
+                            let id = str.replace('#mdwTheme:', '');
+                            if (subscribedOids.includes(id.replace('vis-materialdesign.0.colors.', 'vis-materialdesign.0.colors.light.'))) {
+                                if (debug) console.log(`[isLayoutRefreshNeeded] ${widgetName} (${data.wid}): refresh needed!`);
+                                return true;
+                            } else if (subscribedOids.includes(id.replace('vis-materialdesign.0.colors.', 'vis-materialdesign.0.colors.dark.'))) {
+                                if (debug) console.log(`[isLayoutRefreshNeeded] ${widgetName} (${data.wid}): refresh needed!`);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     },
     calcChecker(prop, wid, widgetName, debug = false) {
         if (prop.includes("calc")) {
@@ -707,11 +763,11 @@ vis.binds.materialdesign.helper = {
     formatNumber(value, minDigits = undefined, maxDigits = undefined) {
         if (!isNaN(parseFloat(value))) {
             value = parseFloat(value);
-            if ((minDigits !== undefined && minDigits !== '') && (maxDigits !== undefined && maxDigits !== '')) {
+            if ((minDigits !== undefined && minDigits !== '' && !isNaN(parseFloat(minDigits))) && (maxDigits !== undefined && maxDigits !== '' && !isNaN(parseFloat(maxDigits)))) {
                 return value.toLocaleString(undefined, { minimumFractionDigits: minDigits, maximumFractionDigits: maxDigits });
-            } else if (minDigits !== undefined && minDigits !== '') {
+            } else if (minDigits !== undefined && minDigits !== '' && !isNaN(parseFloat(minDigits))) {
                 return value.toLocaleString(undefined, { minimumFractionDigits: minDigits });
-            } else if (maxDigits !== undefined && maxDigits !== '') {
+            } else if (maxDigits !== undefined && maxDigits !== '' && !isNaN(parseFloat(maxDigits))) {
                 return value.toLocaleString(undefined, { maximumFractionDigits: maxDigits });
             }
 
@@ -753,6 +809,12 @@ vis.binds.materialdesign.helper = {
                     value = value.replace(/^\"/, "").replace(/\"$/, "").replace(/\\n/g, ' ').replace(/\\t/g, '');
                 }
 
+                if (value.toString().includes("'")) {
+                    console.warn('nested elements found, replace \' with \"');
+                    console.warn(`${key}: ${value}`);
+                    value = value.replace(/\'/g, '"');
+                }
+
                 if (mdwData === '') {
                     mdwData += `mdw-${key}='${value}'` + '\n';
                 } else {
@@ -773,15 +835,19 @@ vis.binds.materialdesign.helper = {
 
         return parentId;
     },
-    extractHtmlWidgetData(el, widgetData, parentId, widgetName, logPrefix, callBack) {
+    extractHtmlWidgetData(el, widgetData, parentId, widgetName, logPrefix, callback) {
         for (const key of Object.keys(widgetData)) {
             if (key !== 'wid') {
                 if (el.attr(`mdw-${key}`)) {
                     // widgetData[key] = el.attr(`mdw-${key}`).replace(/\\"/g, '"').replace(/&x22;/g, '"');
                     widgetData[key] = el.attr(`mdw-${key}`);
+                    widgetData[key] = formatTypeOfValue(widgetData[key]);
+
                 } else if (el.attr(`mdw-${key.toLowerCase()}`)) {
                     // widgetData[key] = el.attr(`mdw-${key.toLowerCase()}`).replace(/\\"/g, '"').replace(/&x22;/g, '"');
                     widgetData[key] = el.attr(`mdw-${key.toLowerCase()}`);
+                    widgetData[key] = formatTypeOfValue(widgetData[key]);
+
                 } else {
                     delete widgetData[key];
                 }
@@ -793,49 +859,82 @@ vis.binds.materialdesign.helper = {
         if (widgetData.debug) console.log(`${logPrefix} [extractHtmlWidgetData] widgetData: ${JSON.stringify(widgetData)} `);
 
         if (widgetData.oid) {
-            let oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe(widgetData.oid, parentId, widgetName, false, false, widgetData.debug, true);
+
+            let oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe(widgetData.oid, parentId, widgetName, false, false, widgetData.debug);
 
             if (widgetData["oid-working"]) {
-                oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe(widgetData["oid-working"], parentId, widgetName, false, false, widgetData.debug, true);
+                oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe(widgetData["oid-working"], parentId, widgetName, false, false, widgetData.debug);
             }
 
             if (oidsNeedSubscribe) {
                 myMdwHelper.subscribeStatesAtRuntime(parentId, widgetName, function () {
                     if (widgetData.debug) console.log(`${logPrefix} [extractHtmlWidgetData] oid subscribed -> fire callback()`);
-                    callBack(widgetData);
-                }, widgetData.debug, true);
+
+                    if (callback) callback(widgetData);
+                }, widgetData.debug);
             } else {
                 if (widgetData.debug) console.log(`${logPrefix} [extractHtmlWidgetData] nothing to subscribed -> fire callback()`);
-                callBack(widgetData);
+                if (callback) callback(widgetData);
             }
         } else {
             if (widgetData.debug) console.log(`${logPrefix} [extractHtmlWidgetData] no oid exist, nothing to subscribed -> fire callback()`);
-            callBack(widgetData);
+            if (callback) callback(widgetData);
+        }
+
+        function formatTypeOfValue(value) {
+            if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
+                return (value.toLowerCase() === 'true');
+            }
+
+            return value;
         }
     },
     setValue(id, value) {
         if (!vis.editMode) {
-            vis.binds.materialdesign.helper.getObject(id, function (obj) {
-                if (obj && obj.common && obj.common['type'] && value !== null) {
-                    if (obj.common['type'] === 'string') {
-                        vis.setValue(id, value.toString());
-                    } else if (obj.common['type'] === 'number') {
-                        vis.setValue(id, parseFloat(value));
-                    } else if (obj.common['type'] === 'boolean') {
-                        vis.setValue(id, !(/^(false|0)$/i).test(value.toString().toLowerCase()) && !!value);
+            if ((/dev[0-9]/).test(id)) {
+                vis.setValue(id, parseInt(value));
+            } else {
+                vis.binds.materialdesign.helper.getObject(id, function (obj) {
+                    if (obj && obj.common && obj.common['type'] && value !== null) {
+                        if (obj.common['type'] === 'string') {
+                            vis.setValue(id, value.toString());
+                        } else if (obj.common['type'] === 'number') {
+                            vis.setValue(id, parseFloat(value));
+                        } else if (obj.common['type'] === 'boolean') {
+                            vis.setValue(id, !(/^(false|0)$/i).test(value.toString().toLowerCase()) && !!value);
+                        } else {
+                            vis.setValue(id, value);
+                        }
                     } else {
                         vis.setValue(id, value);
                     }
-                } else {
-                    vis.setValue(id, value);
-                }
-            })
+                });
+            }
         }
     },
     generateUuidv4() {
         return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
             (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
         );
+    },
+    initializeHapticFeedback() {
+        let audioFile = "/vis.0/materialdesign-widgets-click-sound.mp3";
+
+        vis.conn.readFile(audioFile, function (err, data) {
+            if (err) {
+                console.warn(`vis-materialdesign: click audio file '${audioFile}' not exists!`);
+            } else {
+                soundObj = document.createElement("audio")
+                soundObj.src = audioFile;
+                soundObj.volume = 1;
+                soundObj.autoPlay = false;
+                soundObj.preLoad = true;
+                soundObj.controls = true;
+            }
+        });
+
+        vibrateActive = 'vibrate' in navigator || 'webkitVibrate' in navigator || 'mozVibrate' in navigator || 'msVibrate' in navigator;
+        console.log(`vis-materialdesign: vibration supported by device: '${vibrateActive}'`);
     },
     async initializeSentry(version) {
         let id = 'vis-materialdesign.0.sentry';
@@ -864,11 +963,12 @@ vis.binds.materialdesign.helper = {
             dsn: 'https://888b0efc877b4b12a8a83e3c1fb7fe1a@sentry.iobroker.net/77',
             debug: false,
             release: version,
+            autoSessionTracking: false,
             integrations: [
                 new Sentry.Integrations.Dedupe(),
                 new Sentry.Integrations.CaptureConsole({
                     levels: ['error']
-                })
+                }),
             ],
             beforeSend(event) {
                 // Modify the event here
@@ -876,6 +976,7 @@ vis.binds.materialdesign.helper = {
                     // only send to sentry, if error is at runtime and fired by MDW
 
                     if (!event.message.includes('cannot parse json string') &&                                                  // ignore json parse errors
+                        !event.message.includes('cannot parse subMenu json string') &&                                              // ignore json parse errors
                         !/\b(Cannot access)\b .* \b(before initialization)\b/g.test(event.message) &&                           // ignore lib init errors
                         !/\b(can't access lexical declaration)\b .* \b(before initialization)\b/g.test(event.message) &&        // ignore lib init errors                        
                         !event.message.includes('out of memory') &&
@@ -896,6 +997,154 @@ vis.binds.materialdesign.helper = {
         });
 
         console.log('sentry initialized for vis-materialdesign');
+    },
+    bindCssThemeVariables: async function () {
+        try {
+            let debug = false;
+            myMdwHelper.waitForWidgets(async function () {
+                // subscribe Theme states that needs as listener
+                if (vis.widgets && Object.keys(vis.widgets).length > 0) {
+                    let dummyWid = Object.keys(vis.widgets)[0];
+
+
+                    let oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe('vis-materialdesign.0.lastchange', dummyWid, 'vis-materialdesign:', false, false, debug);
+                    oidsNeedSubscribe = myMdwHelper.oidNeedSubscribe('vis-materialdesign.0.colors.darkTheme', dummyWid, 'vis-materialdesign:', oidsNeedSubscribe, false, debug);
+
+                    myMdwHelper.subscribeStatesAtRuntime(dummyWid, 'vis-materialdesign:', async function () {
+
+                        vis.states.bind('vis-materialdesign.0.colors.darkTheme.val', function (e, newVal, oldVal) {
+                            console.log(`vis-materialdesign: ${newVal ? 'dark theme activated' : 'light theme activated'}`);
+                            setCssVariables(true);
+                        });
+
+                        vis.states.bind('vis-materialdesign.0.lastchange.val', function (e, newVal, oldVal) {
+                            if (oldVal !== undefined) {
+                                console.log(`vis-materialdesign: theme changes detected`);
+                                setCssVariables();
+                            }
+                        });
+
+                        setCssVariables();
+
+                        async function setCssVariables(onlyColors = false) {
+                            let obj = await myMdwHelper.getObjectAsync('system.adapter.vis-materialdesign.0');
+                            let darkTheme = vis.states.attr('vis-materialdesign.0.colors.darkTheme.val');
+
+                            if (obj && obj.native) {
+                                if (obj.native.defaultcolorsDark) {
+                                    let defaultcolors = [];
+                                    let colorList = [];
+
+                                    if (!darkTheme) {
+                                        defaultcolors = obj.native.defaultcolors;
+                                        colorList = obj.native.colors;
+                                    } else {
+                                        defaultcolors = obj.native.defaultcolorsDark;
+                                        colorList = obj.native.colorsDark;
+                                    }
+
+                                    await setCssColorVars(darkTheme, defaultcolors, true);
+                                    await setCssColorVars(darkTheme, colorList);
+                                } else {
+                                    console.error(`vis-materialdesign: no default colors in Adapter settings found!`);
+                                }
+
+                                if (!onlyColors) {
+                                    if (obj.native.defaultfonts) {
+                                        await setCssFonts(obj.native.defaultfonts, true);
+                                        await setCssFonts(obj.native.fonts);
+                                    } else {
+                                        console.error(`vis-materialdesign: no default fonts in Adapter settings found!`);
+                                    }
+
+                                    if (obj.native.defaultfontSizes) {
+                                        await setCssFontSizes(obj.native.defaultfontSizes, true);
+                                        await setCssFontSizes(obj.native.fontSizes);
+                                    } else {
+                                        console.error(`vis-materialdesign: no default font-sizes in Adapter settings found!`);
+                                    }
+                                }
+                            }
+                        }
+                    }, debug);
+                }
+
+                async function setCssColorVars(darkTheme, colorList, isDefault = false) {
+                    let colorId = "";
+
+                    for (var i = 0; i <= colorList.length - 1; i++) {
+                        if (!darkTheme) {
+                            colorId = `vis-materialdesign.0.colors.default_${i}`.replace('.colors.', '.colors.light.');
+                        } else {
+                            colorId = `vis-materialdesign.0.colors.default_${i}`.replace('.colors.', '.colors.dark.');
+                        }
+
+                        if (colorList[i]) {
+                            if (isDefault) {
+                                let ccsVarName = `--materialdesign-widget-theme-color-default-${i}`;
+                                document.documentElement.style.setProperty(ccsVarName, colorList[i]);
+
+                                if (debug) console.debug(`vis-materialdesign: ${!darkTheme ? 'light' : 'dark'} default color '${i}' bind to css variable '${ccsVarName}' (val: ${colorList[i]})`);
+                            } else {
+                                let ccsVarName = `--materialdesign-widget-theme-color-${colorList[i].id.replace('light.', '').replace('dark.', '').replace(/\./g, '-').replace(/_/g, '-')}`;
+                                document.documentElement.style.setProperty(ccsVarName, colorList[i].value);
+
+                                if (debug) console.debug(`vis-materialdesign: color '${colorList[i].id}' bind to css variable '${ccsVarName}' (val: ${colorList[i].value})`);
+                            }
+                        } else {
+                            console.warn(`vis-materialdesign: 'default color ${i}' is 'undefined'`);
+                        }
+                    }
+                    console.log(`vis-materialdesign: theme ${isDefault ? 'default ' : ''}'colors' (${!darkTheme ? 'light' : 'dark'}) successfully bound to css variables`);
+                }
+
+                async function setCssFonts(fontList, isDefault = false) {
+                    for (var i = 0; i <= fontList.length - 1; i++) {
+                        if (fontList[i]) {
+                            if (isDefault) {
+                                let ccsVarName = `--materialdesign-widget-theme-font-default-${i}`
+                                document.documentElement.style.setProperty(ccsVarName, fontList[i]);
+
+                                if (debug) console.debug(`vis-materialdesign: default font '${i}' bind to css variable '${ccsVarName}' (val: ${fontList[i]})`);
+                            } else {
+                                let ccsVarName = `--materialdesign-widget-theme-font-${fontList[i].id.replace(/\./g, '-').replace(/_/g, '-')}`
+                                document.documentElement.style.setProperty(ccsVarName, fontList[i].value);
+
+                                if (debug) console.debug(`vis-materialdesign: font '${fontList[i].id}' bind to css variable '${ccsVarName}' (val: ${fontList[i].value})`);
+                            }
+                        } else {
+                            console.warn(`vis-materialdesign: 'default font ${i}' is 'undefined'`);
+                        }
+                    }
+
+                    console.log(`vis-materialdesign: theme ${isDefault ? 'default ' : ''}'fonts' successfully bound to css variables`);
+                }
+
+                async function setCssFontSizes(fontSizeList, isDefault = false) {
+                    for (var i = 0; i <= fontSizeList.length - 1; i++) {
+                        if (fontSizeList[i]) {
+                            if (isDefault) {
+                                let ccsVarName = `--materialdesign-widget-theme-font-size-default-${i}`
+                                document.documentElement.style.setProperty(ccsVarName, fontSizeList[i] + 'px');
+
+                                if (debug) console.debug(`vis-materialdesign: default font-size '${i}' bind to css variable '${ccsVarName}' (val: ${fontSizeList[i]}px)`);
+                            } else {
+                                let ccsVarName = `--materialdesign-widget-theme-font-size-${fontSizeList[i].id.replace(/\./g, '-').replace(/_/g, '-')}`
+                                document.documentElement.style.setProperty(ccsVarName, fontSizeList[i].value + 'px');
+
+                                if (debug) console.debug(`vis-materialdesign: font '${fontSizeList[i].id}' bind to css variable '${ccsVarName}' (val: ${fontSizeList[i].value}px)`);
+                            }
+                        } else {
+                            console.warn(`vis-materialdesign: 'default font-size ${i}' is 'undefined'`);
+                        }
+                    }
+
+                    console.log(`vis-materialdesign: theme ${isDefault ? 'default ' : ''}'font-sizes' successfully bound to css variables`);
+                }
+            });
+        } catch (ex) {
+            console.error(`[subscribeCssColors] error: ${ex.message}, stack: ${ex.stack}`);
+        }
     },
     async getStateAsync(id) {
         return new Promise((resolve, reject) => {
@@ -918,11 +1167,24 @@ vis.binds.materialdesign.helper = {
                 }
             });
         });
+    },
+    async getJsonObjectsAsync(file) {
+        return new Promise((resolve, reject) => {
+            $.getJSON(file, function (json) {
+                if (json) {
+                    resolve(json);
+                } else {
+                    resolve(null);
+                }
+            });
+        });
     }
 };
 
 let myMdwHelper = vis.binds.materialdesign.helper;
 vis.binds.materialdesign.showVersion();
+let soundObj = null;
+let vibrateActive = false;
 
 // myMdwHelper.waitForVisConnected(async function () {
 //     myMdwHelper.waitForViews(async function () {

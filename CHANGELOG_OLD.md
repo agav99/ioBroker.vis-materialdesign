@@ -1,5 +1,123 @@
 <!-- omit in toc -->
-### 0.3.14 (2020-06-01)
+## 0.5.4 (2021-04-18)
+* (Scrounger) HTML Widgets added - use Material Design Widgets in any html element
+* (Scrounger) Table: Control Elements removed, using new HTML Widgets -> breaking changes !!!
+* (Scrounger) list: using object id for json string added -> breaking changes !!!
+* (Scrounger) new Value Widget added
+* (Scrounger) Card layout bug fixes for HTML Card, IconList, List and Table Widget
+* (Scrounger) icon list: option for status bar text added
+* (Scrounger) icon list: status bar position bug fix
+* (Scrounger) icon list: read only option for buttons added
+* (Scrounger) dialog: option to set height in percent added
+* (Scrounger) json chart: option to override tooltip for every dataset added
+* (Scrounger) json chart: tooltip mode x / y added
+* (Scrounger) json chart: option to override data label added
+* (Scrounger) charts: legend distance to bottom option added
+* (Scrounger) button state: active background color option added
+* (Scrounger) buttons: vibrate on mobil devices bug fix
+* (Scrounger) progress: rotate option added
+* (Scrounger) list: background color option added
+* (Scrounger) progress circular: auto size option added
+* (Scrounger) VIS editor: html previews bug fixes
+* (Scrounger) input, autocomplete, select: autofocus option added
+* (Scrounger) Documentation revised
+* (Scrounger) materialdesignicons library updated to v5.9.55
+* (Scrounger) bug fixes
+
+<!-- omit in toc -->
+## 0.4.2 (2020-12-29)
+* (Scrounger) vis-google-fonts dependency removed
+
+<!-- omit in toc -->
+## 0.4.1 (2020-12-27)
+* (Scrounger): Adapter settings: theme editor implementation completed
+* (Scrounger): Progress Widget: condition binding bug fix
+* (Scrounger): minimal VIS adapter dependency set to v1.3.6
+* (Scrounger): VIS editor: image dialog bug fix
+* (Scrounger): Color themes for buttons and dialogs widgets implemented
+* (Scrounger): Calendar Widget: week number bug fix
+* (Scrougner): icon list: scrollbar bug fix
+* (Scrounger): bug fixes
+
+## 0.4.0-beta (2020-12-09)
+* (Scrounger): Line History Chart Widget: Breaking Changes !!! aggregate (display) method for every dataset configurable, [see documentation for detailed infos](#line-history-chart)!
+* (Scrounger): TopAppBar Widget: Breaking Changes !!! Submenus must now be created using JSON string, [see documentation for detailed infos](#since-version-040)!
+* (Scrounger): Adapter settings wiht theme editor added
+* (Scrounger): bug fix for compatibility issues with other widget adapters
+* (Scrounger): Chechbox Widget: option for border and hover color added
+* (Scrounger): Chechbox Widget: ripple effect bug fix
+* (Scrounger): Buttons Vertical: text alignment option added
+* (Scrounger): added URL support as source for symbols / images
+* (Scrounger): HTML Card Widget: option to hide title, subtitle and text added
+* (Scrounger): HTML Card Widget: background image refresh options by datapoint added
+* (Scrounger): Fixed some errors reported via Sentry
+* (Scrounger): Select & Autocomplete Widget: overriding icon color bug fix
+* (Scrounger): Select & Autocomplete Widget: overriding icon bug fix
+* (Scrounger): Select & Autocomplete Widget: colors bug fixes
+* (Scrounger): Select & Autocomplete Widget: option to override the icon color of textfield for selected menu icon
+* (Scrounger): Select & Autocomplete Widget: text alignment option added
+* (Scrounger): Input Widget: text alignment option added
+* (Scrounger): JSON Chart Widget: option to force x-axis time unit added
+* (Scrounger): JSON Chart Widget: gradient colors for multipe dataset bug fixes
+* (Scrounger): JSON Chart: default tooltip title added
+* (Scrounger): JSON Chart: option to use Today / Yesterday for x-axis labeling added
+* (Scrounger): JSON Chart: option to use Today / Yesterday for tooltip added
+* (Scrounger): JSON Chart: option to change x-axis label distance added
+* (Scrounger): Line History Chart: option for point color added
+* (Scrounger): Line History Chart: option to use Today / Yesterday for x-axis labeling added
+* (Scrounger): Line History Chart: option to use Today / Yesterday for tooltip added
+* (Scrounger): Line History Chart: tooption change x-axis label distance added
+* (Scrounger): Charts Widget: x-Axis time axis bug fixes
+* (Scrounger): Calendar Widget: option to show calendar week numbers in month view added
+* (Scrounger): Calendar Widget: option for custom date format added
+* (Scrounger): IconList Widget: bug fix for performance issue
+* (Scrounger): TopAppBar Widget: options for user groups added
+* (Scrounger): Table Widget: html element added
+* (Scrounger): Masonry & Grid View Widget: default width for handy portrait and landscape view changed
+* (Scrounger): Progress Widget: option for indeterminate style added
+* (Scrounger): dependencies updated
+* (Scrounger): bug fixes
+
+## 0.3.19 (2020-07-18)
+* (Scrounger): Icon Button Widget: background color option for lock icon added
+* (Scrounger): possibility to deactivate sentry implemented -> see documentation
+* (Scrounger): Fixed some bugs reported via Sentry
+* (Scrounger): prevent set value in vis editor
+* (Scrounger): Grid & Mansonry Widget: visibilty by resoltuin bug fix
+* (Scrounger): IconList Widget: Card Background for whole icon list added
+* (Scrounger): Table Wigdet: button link widget added
+* (Scrounger): Table Wigdet: material design icon widget added
+* (Scrounger): Table Wigdet: alignment option for controls added
+* (Scrounger): materialdesignicons library updated to v5.3.45
+* (Scrounger): Round Slider lib updated to v0.5.0
+* (Scrounger): Round Slider Widget: readonly option added
+* (Scrounger): Table Widget: background color hover option added
+* (Scrounger): bug fixes
+
+
+# License
+
+MIT License
+
+Copyright (c) 2021 Scrounger <scrounger@gmx.net>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.### 0.3.14 (2020-06-01)
 * (Scrounger): Table Widget: bug fixes
 
 <!-- omit in toc -->

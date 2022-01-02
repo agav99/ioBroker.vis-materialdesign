@@ -19,6 +19,9 @@
   --materialdesign-font-top-app-bar-sub-item: inherit;
   --materialdesign-font-top-app-bar-sub-item-disabled: inherit;
   --materialdesign-color-top-app-bar-header-background: #44739e;
+  --materialdesign-top-app-bar-color-burger-icon: #fff;
+  --materialdesign-color-item-icon-selected: #44739e;
+  --materialdesign-color-sub-item-icon-selected: #44739e;
 
   --materialdesign-color-checkbox: #44739e;
   --materialdesign-color-checkbox-border: rgba(0, 0, 0, 0.54);
@@ -32,6 +35,11 @@
   --materialdesign-button-lockicon-color: #B22222;
 
   --material-progress-circular-color: #44739e;
+
+
+  --materialdesign-list-header-font-size: 24px;
+  --materialdesign-list-header-font-family: inherit;
+  --materialdesign-list-header-font-color: #44739e;
 
   --materialdesign-color-drawer-background: #fff;
   --materialdesign-color-drawer-sub-background: #fff;
@@ -103,6 +111,10 @@
   --materialdesign-grid-gaps: 0px;
 
   --materialdesign-icon-list-background: transparent;
+
+  --materialdesign-icon-list-header-font-size: 24px;
+  --materialdesign-icon-list-header-font-family: inherit;
+  --materialdesign-icon-list-header-font-color: #44739e;
 
   --materialdesign-icon-list-items-per-row: 3;
   --materialdesign-icon-list-items-min-width: 50px;
@@ -315,6 +327,7 @@
   --vue-progress-progress-striped-width1: 25%;
   --vue-progress-progress-striped-width2: 50%; 
   --vue-progress-progress-striped-width3: 75%;
+  --vue-progress-progress-striped-distance: 20px 20px;
 
   --vue-progress-circular-progress-color: #44739e;
   --vue-progress-circular-progress-color-background: #e6e6e6;
@@ -775,12 +788,12 @@ svg.materialdesign-widget .materialdesign-button__icon {
 .materialdesign-widget .materialdesign-button::before, 
 .materialdesign-widget.materialdesign-button::after,
 .materialdesign-widget .materialdesign-button::after {
-  background-color: var(--materialdesign-color-button-pressed, var(--materialdesign-color-primary));
+  background-color: var(--materialdesign-color-button-pressed, var(--materialdesign-color-primary)) !important;
 }
 
-.materialdesign-widget .materialdesign-icon-list-container .materialdesign-button::before, 
-.materialdesign-widget .materialdesign-icon-list-container .materialdesign-button::after {
-  background-color: var(--materialdesign-color-icon-button-hover);
+.materialdesign-widget .materialdesign-icon-list-container .materialdesign-iconList-button::before, 
+.materialdesign-widget .materialdesign-icon-list-container .materialdesign-iconList-button::after {
+  background-color: var(--materialdesign-color-icon-button-hover) !important;
 }
 
 @supports not (-ms-ime-align: auto) {
@@ -789,12 +802,12 @@ svg.materialdesign-widget .materialdesign-button__icon {
   .materialdesign-widget.materialdesign-button::after,
   .materialdesign-widget .materialdesign-button::after {
     /* @alternate */
-    background-color: var(--materialdesign-color-button-pressed, var(--materialdesign-color-primary));
+    background-color: var(--materialdesign-color-button-pressed, var(--materialdesign-color-primary)) !important;
   }
 
-  .materialdesign-widget .materialdesign-icon-list-container .materialdesign-button::before, 
-  .materialdesign-widget .materialdesign-icon-list-container .materialdesign-button::after {
-    background-color: var(--materialdesign-color-icon-button-hover);
+  .materialdesign-widget .materialdesign-icon-list-container .materialdesign-iconList-button::before, 
+  .materialdesign-widget .materialdesign-icon-list-container .materialdesign-iconList-button::after {
+    background-color: var(--materialdesign-color-icon-button-hover) !important;
   }
 }
 .materialdesign-widget.materialdesign-button:hover::before,
@@ -843,7 +856,7 @@ svg.materialdesign-widget .materialdesign-button__icon {
 .materialdesign-widget .materialdesign-button--unelevated .materialdesign-button-body::after {
     /* @alternate */
     /* background-color: var(--mdc-theme-on-primary, #fff); */
-    background-color: var(--materialdesign-color-button-pressed, var(--materialdesign-color-secondary));
+    background-color: var(--materialdesign-color-button-pressed, var(--materialdesign-color-secondary)) !important;
   }
 }
 .materialdesign-widget.materialdesign-button--raised:hover::before,
@@ -890,7 +903,7 @@ svg.materialdesign-widget .materialdesign-button__icon {
   border-radius:  100%;
   width: 48px;
   height: 48px;
-  padding: 12px;
+  /* padding: 12px; */
   font-size: 24px;
   display: inline-block;
   /* position: relative;  --> caused position bug in vis editor */ 
@@ -1381,9 +1394,19 @@ svg.materialdesign-widget .materialdesign-button__icon {
 }
 
 .materialdesign-widget .mdc-top-app-bar__title {
+  display: flex;
+  align-items: center;
+  height: 100%;
   font-family: var(--materialdesign-font-top-app-bar-title);
   font-size:  var(--materialdesign-font-size-top-app-bar-title);
-  color: var(--materialdesign-color-top-app-bar-title)
+  color: var(--materialdesign-color-top-app-bar-title);
+  margin-right: 12px;
+}
+
+.materialdesign-list-header {
+  font-size: var(--materialdesign-list-header-font-size);
+  font-family: var(--materialdesign-list-header-font-family);
+  color: var(--materialdesign-list-header-font-color);
 }
 
 .materialdesign-widget .mdc-drawer__content .mdc-list-item__text {
@@ -1394,9 +1417,21 @@ svg.materialdesign-widget .materialdesign-button__icon {
   font-family: var(--materialdesign-font-top-app-bar-sub-item);
 }
 
+.materialdesign-widget .mdc-drawer__content .mdc-list-item--activated .materialdesign-icon-image {
+  color: var(--materialdesign-color-item-icon-selected) !important;
+}
+
+.materialdesign-widget .mdc-drawer__content .isSubItem.mdc-list-item--activated .materialdesign-icon-image {
+  color: var(--materialdesign-color-sub-item-icon-selected) !important;
+}
+
 /* App Top Bar Short */
 .materialdesign-widget .mdc-top-app-bar--short-fixed-adjust {
   padding-top: 0px;
+}
+
+.materialdesign-widget .mdc-icon-button.material-icons.mdc-top-app-bar__navigation-icon{
+  color: var(--materialdesign-top-app-bar-color-burger-icon);
 }
 
 .materialdesign-widget .materialdesign-list-item-backdrop-container {
@@ -1448,6 +1483,11 @@ svg.materialdesign-widget .materialdesign-button__icon {
   min-height: 40px !important; 
   height: auto !important;
   background-color: var(--materialdesign-color-list-item-background);
+}
+
+.materialdesign-widget .materialdesign-list-card .mdc-list.materialdesign-list-container {
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .materialdesign-widget .mdc-sub-list-item {
@@ -2076,6 +2116,12 @@ svg.materialdesign-widget .materialdesign-button__icon {
 }
 
 /* iconList */
+.materialdesign-icon-list-header {
+  font-size: var(--materialdesign-icon-list-header-font-size);
+  font-family: var(--materialdesign-icon-list-header-font-family);
+  color: var(--materialdesign-icon-list-header-font-color);
+}
+
 .materialdesign-icon-list-container {
   display: flex;
   /* justify-content: center; */
@@ -2091,7 +2137,8 @@ svg.materialdesign-widget .materialdesign-button__icon {
   justify-content: center;
   flex-direction: row;
   flex-wrap: wrap;
-  margin: var(--materialdesign-icon-list-items-gaps);  
+  margin: var(--materialdesign-icon-list-items-gaps);
+  position: relative;
 }
 
 .materialdesign-icon-list-item-standard {
@@ -2142,6 +2189,7 @@ svg.materialdesign-widget .materialdesign-button__icon {
   text-overflow: ellipsis;
   overflow: hidden;
   padding: 4px 4px 0 4px;
+  white-space: normal;
 }
 
 .materialdesign-icon-list-item-subText{
@@ -2153,6 +2201,7 @@ svg.materialdesign-widget .materialdesign-button__icon {
   text-overflow: ellipsis;
   overflow: hidden;
   padding: 2px 4px 0 4px;
+  white-space: normal;
 }
 
 .materialdesign-icon-list-item-value{
@@ -2163,7 +2212,7 @@ svg.materialdesign-widget .materialdesign-button__icon {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  padding-top: 2px;
+  padding: 2px 4px 0 4px;
 }
 
 .materialdesign-icon-list-item-text-vertical {
@@ -2172,7 +2221,7 @@ svg.materialdesign-widget .materialdesign-button__icon {
 
 .materialdesign-icon-list-item-layout-vertical-status-line {
   background: transparent;
-  min-height: 4px; 
+  /* min-height: 4px;  */
   width: 100%; 
   /* margin-left: -4px;
   margin-right: -4px;
@@ -2182,7 +2231,7 @@ svg.materialdesign-widget .materialdesign-button__icon {
 
 .materialdesign-icon-list-item-layout-vertical-status-line-card {
   background: transparent;
-  min-height: 4px; 
+  /* min-height: 4px;  */
   width: 100%; 
   border-radius: 0 0 4px 4px;
   /* margin-left: -4px;
@@ -2212,7 +2261,7 @@ svg.materialdesign-widget .materialdesign-button__icon {
 
 .materialdesign-icon-list-item-layout-horizontal-status-line {
   background: transparent;
-  min-height: 4px; 
+  /* min-height: 4px;  */
   width: 100%; 
   /* margin-left: -4px;
   margin-right: -4px;
@@ -2222,7 +2271,7 @@ svg.materialdesign-widget .materialdesign-button__icon {
 
 .materialdesign-icon-list-item-layout-horizontal-status-line-card {
   background: transparent;
-  min-height: 4px; 
+  /* min-height: 4px;  */
   width: 100%; 
   border-radius: 0 0 4px 4px;
   /* margin-left: -4px;
@@ -4047,8 +4096,8 @@ svg.materialdesign-widget .materialdesign-button__icon {
   position: relative;
   align-items: center;
   display: flex;
-  max-width: 100%;
-  width: 100%;
+  max-width: calc(100% - 20px);
+  width: calc(100% - 20px);
   padding: 0 10px;
 }
 
@@ -5419,7 +5468,7 @@ svg.materialdesign-widget .materialdesign-button__icon {
 .v-btn--block {
   display: flex;
   flex: 1 0 auto;
-  min-width: 100% !important;
+  /* min-width: 100% !important; */
   max-width: auto;
 }
 
@@ -6848,7 +6897,7 @@ svg.materialdesign-widget .materialdesign-button__icon {
 
 .v-progress-linear--striped .v-progress-linear__determinate {
   background-image: linear-gradient(var(--vue-progress-progress-striped-angle), var(--vue-progress-progress-color-striped) var(--vue-progress-progress-striped-width1), transparent 0, transparent var(--vue-progress-progress-striped-width2), var(--vue-progress-progress-color-striped) 0, var(--vue-progress-progress-color-striped) var(--vue-progress-progress-striped-width3), transparent 0, transparent);
-  background-size: 40px 40px;
+  background-size: var(--vue-progress-progress-striped-distance);
   background-repeat: repeat;
 }
 

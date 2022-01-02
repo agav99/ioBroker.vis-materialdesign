@@ -33,6 +33,12 @@ vis.binds.materialdesign = {
                 console.log('Version vis-materialdesign: ' + version);
 
                 myMdwHelper.initializeSentry(version);
+                myMdwHelper.bindCssThemeVariables();
+                myMdwHelper.initializeHapticFeedback();
+
+                if (vis.editMode) {
+                    vis.binds.materialdesign.viseditor.themeChangeHandler();
+                }
             });
         });
     },
@@ -46,5 +52,5 @@ vis.binds.materialdesign = {
         } else {
             const mdcIconButton = new mdc.iconButton.MDCIconButtonToggle(btn);
         }
-    },
+    }
 };

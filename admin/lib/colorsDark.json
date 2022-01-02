@@ -376,7 +376,7 @@
         "desc": "imageColor",
         "defaultValue": 5,
         "widget": "Dialog, Dialog iFrame"
-    },    
+    },
     {
         "id": "dark.dialog.background",
         "desc": "backgroundColor",
@@ -412,7 +412,7 @@
         "desc": "pressColor",
         "defaultValue": 2,
         "widget": "Dialog, Dialog iFrame"
-    },    
+    },
     {
         "id": "dark.dialog.close_button_icon",
         "desc": "fullscreenCloseIconColor",
@@ -420,8 +420,8 @@
         "widget": "Dialog, Dialog iFrame"
     },
     {
-        "id": "dark.dialog.close_button_icon",
-        "desc": "fullscreenCloseIconColor",
+        "id": "dark.dialog.close_button_fullscreen_press",
+        "desc": "fullscreenCloseIconPressColor",
         "defaultValue": 5,
         "widget": "Dialog, Dialog iFrame"
     },
@@ -480,6 +480,18 @@
         "widget": "Icon Button State, Icon Button State Multi, Icon Button Toggle"
     },
     {
+        "id": "dark.icon_list.header",
+        "desc": "headerTextColor",
+        "defaultValue": 2,
+        "widget": "Icon List"
+    },
+    {
+        "id": "dark.icon_list.header_icon",
+        "desc": "headerImageColor",
+        "defaultValue": 2,
+        "widget": "Icon List"
+    },
+    {
         "id": "dark.icon_list.background",
         "desc": "containerBackgroundColor",
         "defaultValue": 7,
@@ -494,6 +506,12 @@
     {
         "id": "dark.icon_list.text",
         "desc": "labelFontColor",
+        "defaultValue": 2,
+        "widget": "Icon List"
+    },
+    {
+        "id": "dark.icon_list.text_selected",
+        "desc": "labelFontColorSelected",
         "defaultValue": 2,
         "widget": "Icon List"
     },
@@ -657,6 +675,18 @@
         "id": "dark.list.background",
         "desc": "listBackground",
         "defaultValue": 5,
+        "widget": "List"
+    },
+    {
+        "id": "dark.list.header_main",
+        "desc": "headerTextColor",
+        "defaultValue": 2,
+        "widget": "List"
+    },
+    {
+        "id": "dark.list.header_icon",
+        "desc": "headerImageColor",
+        "defaultValue": 2,
         "widget": "List"
     },
     {
@@ -936,6 +966,12 @@
         "widget": "Top App Bar"
     },
     {
+        "id": "dark.top_app_bar.icon",
+        "desc": "topAppBarIconColor",
+        "value": "#FFFFFF",
+        "widget": "Top App Bar"
+    },
+    {
         "id": "dark.top_app_bar.title",
         "desc": "colorTopAppBarTitle",
         "defaultValue": 5,
@@ -986,6 +1022,24 @@
     {
         "id": "dark.top_app_bar.item_icon",
         "desc": "iconDrawerColor",
+        "defaultValue": 0,
+        "widget": "Top App Bar"
+    },
+    {
+        "id": "dark.top_app_bar.item_icon_selected",
+        "desc": "iconDrawerColorSelected",
+        "defaultValue": 0,
+        "widget": "Top App Bar"
+    },
+    {
+        "id": "dark.top_app_bar.subItem_icon",
+        "desc": "subIconDrawerColor",
+        "defaultValue": 0,
+        "widget": "Top App Bar"
+    },
+    {
+        "id": "dark.top_app_bar.subItem_icon_selected",
+        "desc": "subIconDrawerColorSelected",
         "defaultValue": 0,
         "widget": "Top App Bar"
     },

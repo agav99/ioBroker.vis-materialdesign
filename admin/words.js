@@ -339,28 +339,28 @@ systemDictionary = {
         "zh-cn": "显示标记"
     },
     "valueLabelMin": {
-        "en": "text for value less than min",
-        "de": "Text für Wert kleiner als min",
-        "ru": "текст на значение меньше мин",
-        "pt": "texto para valor menor que min",
-        "nl": "tekst voor waarde minder dan min",
-        "fr": "texte pour valeur inférieure à min",
-        "it": "testo per valore inferiore a min",
-        "es": "texto para un valor inferior a min",
-        "pl": "tekst o wartości mniejszej niż min",
-        "zh-cn": "值小于min的文字"
+        "en": "text for value less or equal than minimum",
+        "de": "Text für Wert kleiner oder gleich Minimum",
+        "ru": "текст для значения, меньшего или равного минимальному",
+        "pt": "texto para valor menor ou igual ao mínimo",
+        "nl": "tekst voor waarde kleiner of gelijk aan minimum",
+        "fr": "texte pour une valeur inférieure ou égale au minimum",
+        "it": "testo per valore minore o uguale al minimo",
+        "es": "texto para valor menor o igual que mínimo",
+        "pl": "tekst dla wartości mniejszej lub równej minimum",
+        "zh-cn": "小于或等于最小值的文本"
     },
     "valueLabelMax": {
-        "en": "text for value greater than min",
-        "de": "Text für einen Wert größer als min",
-        "ru": "текст на значение больше мин",
-        "pt": "texto para valor maior que min",
-        "nl": "tekst voor waarde groter dan min",
-        "fr": "texte de valeur supérieure à min",
-        "it": "testo per valore maggiore di min",
-        "es": "texto para un valor mayor que min",
-        "pl": "tekst dla wartości większej niż min",
-        "zh-cn": "值大于min的文字"
+        "en": "text for value less or equal than maximum",
+        "de": "Text für Wert kleiner oder gleich Maximum",
+        "ru": "текст для значения, меньшего или равного максимальному",
+        "pt": "texto para valor menor ou igual ao máximo",
+        "nl": "tekst voor waarde kleiner of gelijk aan maximum",
+        "fr": "texte pour une valeur inférieure ou égale au maximum",
+        "it": "testo per valore minore o uguale al massimo",
+        "es": "texto para un valor menor o igual que el máximo",
+        "pl": "tekst dla wartości mniejszej lub równej maksimum",
+        "zh-cn": "小于或等于最大值的文本"
     },
     "labelClickActive": {
         "en": "activate label click",
@@ -806,6 +806,18 @@ systemDictionary = {
         "pl": "ikony paska nawigacji",
         "zh-cn": "导航栏图标"
     },
+    "group_drawerItemsData": {
+        "en": "data of navigation bar",
+        "de": "Navigationsleiste: Daten",
+        "ru": "данные панели навигации",
+        "pt": "dados da barra de navegação",
+        "nl": "gegevens van navigatiebalk",
+        "fr": "données de la barre de navigation",
+        "it": "dati della barra di navigazione",
+        "es": "datos de la barra de navegación",
+        "pl": "dane paska nawigacyjnego",
+        "zh-cn": "导航栏数据"
+    },
     "group_drawerItems": {
         "en": "item of navigation bar",
         "de": "Navigationsleiste: Element",
@@ -1093,6 +1105,18 @@ systemDictionary = {
         "es": "muestra el título del elemento de barra de navegación seleccionado",
         "pl": "pokaż tytuł wybranego elementu paska nawigacji",
         "zh-cn": "显示所选导航栏项目的标题"
+    },
+    "showSelectedItemIconInTitle": {
+        "en": "show icon of selected navigation bar item",
+        "de": "Symbol des ausgewählten Navigationsleistenelements anzeigen",
+        "ru": "показать значок выбранного элемента панели навигации",
+        "pt": "mostrar o ícone do item da barra de navegação selecionado",
+        "nl": "toon het pictogram van het geselecteerde navigatiebalkitem",
+        "fr": "afficher l'icône de l'élément de la barre de navigation sélectionné",
+        "it": "mostra l'icona dell'elemento selezionato nella barra di navigazione",
+        "es": "mostrar el icono del elemento de la barra de navegación seleccionado",
+        "pl": "pokaż ikonę wybranego elementu paska nawigacji",
+        "zh-cn": "显示所选导航栏项目的图标"
     },
     "invertImage": {
         "en": "invert image color",
@@ -2488,6 +2512,78 @@ systemDictionary = {
         "es": "relleno derecho",
         "pl": "wyściełanie w prawo",
         "zh-cn": "向右填充"
+    },
+    "padding_top": {
+        "en": "padding top",
+        "de": "Abstand oben",
+        "ru": "мягкий верх",
+        "pt": "top de enchimento",
+        "nl": "vulling top",
+        "fr": "haut de rembourrage",
+        "it": "imbottitura superiore",
+        "es": "acolchado superior",
+        "pl": "wyściełany top",
+        "zh-cn": "垫顶"
+    },
+    "padding_bottom": {
+        "en": "padding bottom",
+        "de": "Abstand unten",
+        "ru": "обивка дна",
+        "pt": "fundo de enchimento",
+        "nl": "opvulling onderkant",
+        "fr": "bas de rembourrage",
+        "it": "fondo imbottito",
+        "es": "fondo acolchado",
+        "pl": "wyściółka na dole",
+        "zh-cn": "填充底部"
+    },
+    "header_padding_left": {
+        "en": "padding left",
+        "de": "Abstand links",
+        "ru": "отступ слева",
+        "pt": "preenchimento esquerdo",
+        "nl": "opvulling links",
+        "fr": "rembourrage à gauche",
+        "it": "imbottitura sinistra",
+        "es": "relleno a la izquierda",
+        "pl": "padding left",
+        "zh-cn": "向左填充"
+    },
+    "header_padding_right": {
+        "en": "padding right",
+        "de": "Abstand rechts",
+        "ru": "отступ справа",
+        "pt": "estofamento direito",
+        "nl": "opvulling rechts",
+        "fr": "rembourrage droit",
+        "it": "imbottitura destra",
+        "es": "relleno derecho",
+        "pl": "wyściełanie w prawo",
+        "zh-cn": "向右填充"
+    },
+    "header_padding_top": {
+        "en": "padding top",
+        "de": "Abstand oben",
+        "ru": "мягкий верх",
+        "pt": "top de enchimento",
+        "nl": "vulling top",
+        "fr": "haut de rembourrage",
+        "it": "imbottitura superiore",
+        "es": "acolchado superior",
+        "pl": "wyściełany top",
+        "zh-cn": "垫顶"
+    },
+    "header_padding_bottom": {
+        "en": "padding bottom",
+        "de": "Abstand unten",
+        "ru": "обивка дна",
+        "pt": "fundo de enchimento",
+        "nl": "opvulling onderkant",
+        "fr": "bas de rembourrage",
+        "it": "fondo imbottito",
+        "es": "fondo acolchado",
+        "pl": "wyściółka na dole",
+        "zh-cn": "填充底部"
     },
     "fontFamily": {
         "en": "font family",
@@ -8345,6 +8441,18 @@ systemDictionary = {
         "pl": "kolor tekstu",
         "zh-cn": "文字颜色"
     },
+    "labelFontColorSelected": {
+        "en": "text color active",
+        "de": "Textfarbe aktiv",
+        "ru": "цвет текста активен",
+        "pt": "cor do texto ativa",
+        "nl": "tekstkleur actief",
+        "fr": "couleur du texte active",
+        "it": "colore del testo attivo",
+        "es": "color de texto activo",
+        "pl": "kolor tekstu aktywny",
+        "zh-cn": "文本颜色激活"
+    },
     "subLabelFontSize": {
         "en": "sub text size",
         "de": "Untertextgröße",
@@ -8417,6 +8525,18 @@ systemDictionary = {
         "pl": "kolor paska stanu",
         "zh-cn": "状态栏颜色"
     },
+    "statusBarColorActive": {
+        "en": "status bar color if active",
+        "de": "Farbe der Statusleiste, wenn aktiv",
+        "ru": "цвет строки состояния, если активен",
+        "pt": "cor da barra de status se ativa",
+        "nl": "statusbalkkleur indien actief",
+        "fr": "couleur de la barre d'état si active",
+        "it": "colore della barra di stato se attivo",
+        "es": "color de la barra de estado si está activo",
+        "pl": "kolor paska stanu, jeśli jest aktywny",
+        "zh-cn": "状态栏颜色（如果活动）"
+    },
     "statusBarText": {
         "en": "text of status bar",
         "de": "Text der Statusleiste",
@@ -8428,6 +8548,18 @@ systemDictionary = {
         "es": "texto de la barra de estado",
         "pl": "tekst paska stanu",
         "zh-cn": "状态栏文字"
+    },
+    "statusBarTextActive": {
+        "en": "text of status bar if active",
+        "de": "Text der Statusleiste wenn aktiv",
+        "ru": "текст строки состояния, если активен",
+        "pt": "texto da barra de status se ativo",
+        "nl": "tekst van statusbalk indien actief",
+        "fr": "texte de la barre d'état si actif",
+        "it": "testo della barra di stato se attivo",
+        "es": "texto de la barra de estado si está activo",
+        "pl": "tekst paska stanu, jeśli jest aktywny",
+        "zh-cn": "状态栏的文本（如果处于活动状态）"
     },
     "valueAppendix": {
         "en": "text to append to value",
@@ -9498,16 +9630,16 @@ systemDictionary = {
         "zh-cn": "如果分辨率低于则显示全屏对话框"
     },
     "group_layoutdialogCloseButton": {
-        "en": "Layout of dialog close button",
-        "de": "Layout der Schaltfläche zum Schließen des Dialogs",
-        "ru": "Расположение кнопки закрытия диалога",
-        "pt": "Layout do botão Fechar da caixa de diálogo",
-        "nl": "Lay-out van de knop Sluiten",
-        "fr": "Disposition du bouton de fermeture de la boîte de dialogue",
-        "it": "Layout del pulsante di chiusura della finestra di dialogo",
-        "es": "Diseño del botón de cerrar diálogo",
-        "pl": "Układ przycisku zamknięcia okna dialogowego",
-        "zh-cn": "对话框关闭按钮的布局"
+        "en": "layout of dialog footer buttons",
+        "de": "Layout der Schaltflächen in der Dialogfußzeile",
+        "ru": "макет кнопок нижнего колонтитула диалогового окна",
+        "pt": "layout dos botões de rodapé da caixa de diálogo",
+        "nl": "lay-out van dialoogvoettekstknoppen",
+        "fr": "disposition des boutons de pied de page de la boîte de dialogue",
+        "it": "layout dei pulsanti del piè di pagina della finestra di dialogo",
+        "es": "diseño de los botones de pie de página de diálogo",
+        "pl": "układ przycisków stopki okna dialogowego",
+        "zh-cn": "对话框页脚按钮的布局"
     },
     "buttonPosition": {
         "en": "button position",
@@ -9618,16 +9750,16 @@ systemDictionary = {
         "zh-cn": "全角按钮"
     },
     "buttonText": {
-        "en": "text",
-        "de": "Text",
-        "ru": "текст",
-        "pt": "texto",
-        "nl": "tekst",
-        "fr": "texte",
-        "it": "testo",
-        "es": "texto",
-        "pl": "tekst",
-        "zh-cn": "文本"
+        "en": "text of close button",
+        "de": "Text des Schließen-Buttons",
+        "ru": "текст кнопки закрытия",
+        "pt": "texto do botão fechar",
+        "nl": "tekst van knop sluiten",
+        "fr": "texte du bouton de fermeture",
+        "it": "testo del pulsante di chiusura",
+        "es": "texto del botón cerrar",
+        "pl": "tekst przycisku zamykania",
+        "zh-cn": "关闭按钮的文字"
     },
     "buttonFontSize": {
         "en": "font size",
@@ -9712,6 +9844,66 @@ systemDictionary = {
         "es": "color de prensa",
         "pl": "naciśnij kolor",
         "zh-cn": "按颜色"
+    },
+    "dlgShowSaveButton": {
+        "en": "show save button",
+        "de": "Speichern-Button anzeigen",
+        "ru": "показать кнопку сохранения",
+        "pt": "mostrar botão salvar",
+        "nl": "toon opslaan knop",
+        "fr": "afficher le bouton d'enregistrement",
+        "it": "mostra il pulsante di salvataggio",
+        "es": "mostrar el botón guardar",
+        "pl": "pokaż przycisk zapisu",
+        "zh-cn": "显示保存按钮"
+    },
+    "dlgSaveButtonText": {
+        "en": "text of save button",
+        "de": "Text des Speichern-Buttons",
+        "ru": "текст кнопки сохранения",
+        "pt": "texto do botão salvar",
+        "nl": "tekst van knop opslaan save",
+        "fr": "texte du bouton de sauvegarde",
+        "it": "testo del pulsante di salvataggio",
+        "es": "texto del botón guardar",
+        "pl": "tekst przycisku zapisu",
+        "zh-cn": "保存按钮的文本"
+    },
+    "dlgSaveButtonIcon": {
+        "en": "fullscreen save icon",
+        "de": "Vollbild-Speichersymbol",
+        "ru": "полноэкранный значок сохранения",
+        "pt": "ícone de salvar em tela cheia",
+        "nl": "pictogram voor opslaan op volledig scherm",
+        "fr": "icône de sauvegarde en plein écran",
+        "it": "icona di salvataggio a schermo intero",
+        "es": "icono de guardar en pantalla completa",
+        "pl": "ikona zapisywania na pełnym ekranie",
+        "zh-cn": "全屏保存图标"
+    },
+    "dlgSaveButtonOid": {
+        "en": "object id for save action",
+        "de": "Objekt-ID für Aktion speichern",
+        "ru": "идентификатор объекта для действия сохранения",
+        "pt": "id do objeto para salvar ação",
+        "nl": "object-ID voor opslagactie",
+        "fr": "ID d'objet pour l'action d'enregistrement",
+        "it": "ID oggetto per l'azione di salvataggio",
+        "es": "ID de objeto para guardar la acción",
+        "pl": "identyfikator obiektu dla akcji zapisu",
+        "zh-cn": "保存操作的对象 ID"
+    },
+    "dlgSaveButtonValue": {
+        "en": "value that should write on save action",
+        "de": "Wert, der bei der Speicheraktion geschrieben werden soll",
+        "ru": "значение, которое следует записать при сохранении действия",
+        "pt": "valor que deve ser escrito na ação de salvar",
+        "nl": "waarde die zou moeten schrijven op de actie opslaan",
+        "fr": "valeur qui devrait écrire sur l'action de sauvegarde",
+        "it": "valore che dovrebbe scrivere sull'azione di salvataggio",
+        "es": "valor que debe escribir en la acción de guardar",
+        "pl": "wartość, którą należy zapisać przy akcji zapisu",
+        "zh-cn": "应该写入保存操作的值"
     },
     "aggregate": {
         "en": "display methode",
@@ -10181,6 +10373,18 @@ systemDictionary = {
         "es": "valor de reserva si no está en el grupo de usuarios",
         "pl": "wartość rezerwowa, jeśli nie jest w grupie użytkowników",
         "zh-cn": "后备值（如果不在用户组中）"
+    },
+    "navDisableDefaultValue": {
+        "en": "disable fallback value",
+        "de": "Fallback-Wert deaktivieren",
+        "ru": "отключить резервное значение",
+        "pt": "desabilitar valor substituto",
+        "nl": "terugvalwaarde uitschakelen",
+        "fr": "désactiver la valeur de repli",
+        "it": "disabilitare il valore di fallback",
+        "es": "deshabilitar el valor de respaldo",
+        "pl": "wyłącz wartość rezerwową",
+        "zh-cn": "禁用后备值"
     },
     "progressIndeterminate": {
         "en": "indeterminate - continuously animates",
@@ -10950,6 +11154,30 @@ systemDictionary = {
         "pl": "użyj motywu",
         "zh-cn": "使用主题"
     },
+    "useLightTheme": {
+        "en": "light theme values",
+        "de": "helle Thema Werte",
+        "ru": "яркие значения темы",
+        "pt": "valores de tema brilhante",
+        "nl": "heldere themawaarden",
+        "fr": "valeurs de thème lumineux",
+        "it": "valori del tema luminoso",
+        "es": "valores de tema brillante",
+        "pl": "jasne wartości tematyczne",
+        "zh-cn": "明亮的主题值"
+    },
+    "useDarkTheme": {
+        "en": "dark theme values",
+        "de": "dunkle Thema Werte",
+        "ru": "значения темной темы",
+        "pt": "valores de tema escuro",
+        "nl": "donkere themawaarden",
+        "fr": "valeurs du thème sombre",
+        "it": "valori del tema scuro",
+        "es": "valores de tema oscuro",
+        "pl": "ciemne wartości motywu",
+        "zh-cn": "黑暗主题值"
+    },
     "SelectJavascriptInstance": {
         "en": "Javascript Instance",
         "de": "Javascript Instanz",
@@ -11082,17 +11310,17 @@ systemDictionary = {
         "pl": "Typ widżetu",
         "zh-cn": "小部件类型"
     },
-    "Material Design Widget datapoint binding copied to clipboard": {
-        "en": "Material Design Widget datapoint binding copied to clipboard",
-        "de": "Material Design Widget Datenpunkt-Binding in die Zwischenablage kopiert",
-        "ru": "Привязка точек данных виджета Material Design скопирована в буфер обмена",
-        "pt": "Vinculação do ponto de dados do widget do Material Design copiada para a área de transferência",
-        "nl": "Material Design Widget datapunt binding gekopieerd naar klembord",
-        "fr": "Liaison de point de données du widget Material Design copiée dans le presse-papiers",
-        "it": "Binding del punto dati del widget di Material Design copiato negli appunti",
-        "es": "Enlace de punto de datos del widget de diseño de materiales copiado al portapapeles",
-        "pl": "Powiązanie punktu danych widgetu Material Design skopiowane do schowka",
-        "zh-cn": "物料设计小部件数据点绑定已复制到剪贴板"
+    "Material Design Widget css variable {0} copied to clipboard": {
+        "en": "Material Design Widget css variable {0} copied to clipboard",
+        "de": "Material Design Widget CSS-Variable {0} in Zwischenablage kopiert",
+        "ru": "Переменная css {0} виджета материального дизайна скопирована в буфер обмена",
+        "pt": "Variável css do widget Material Design {0} copiada para a área de transferência",
+        "nl": "Material Design Widget css-variabele {0} gekopieerd naar klembord",
+        "fr": "Variable CSS du widget Material Design {0} copiée dans le presse-papiers",
+        "it": "Variabile CSS di Material Design Widget {0} copiata negli appunti",
+        "es": "La variable CSS del widget de diseño de materiales {0} se copió en el portapapeles",
+        "pl": "Zmienna css Material Design Widget {0} skopiowana do schowka",
+        "zh-cn": "Material Design Widget css 变量 {0} 已复制到剪贴板"
     },
     "dialogUsingDatapoint": {
         "en": "dialog use datapoint to show",
@@ -11489,5 +11717,209 @@ systemDictionary = {
         "es": "sí",
         "pl": "tak",
         "zh-cn": "是的"
+    },
+    "iconDrawerColor": {
+        "en": "icon color",
+        "de": "Symbolfarbe",
+        "ru": "цвет значка",
+        "pt": "cor do ícone",
+        "nl": "pictogram kleur",
+        "fr": "couleur de l'icône",
+        "it": "colore dell'icona",
+        "es": "color del icono",
+        "pl": "kolor ikony",
+        "zh-cn": "图标颜色"
+    },
+    "iconDrawerColorSelected": {
+        "en": "icon color activ",
+        "de": "Symbolfarbe aktiv",
+        "ru": "цвет значка activ",
+        "pt": "ícone cor ativ",
+        "nl": "pictogram kleur actief",
+        "fr": "couleur de l'icône activée",
+        "it": "icona colore attivazione",
+        "es": "icono de color activ",
+        "pl": "kolor ikony aktywny",
+        "zh-cn": "图标颜色激活"
+    },
+    "subIconDrawerColor": {
+        "en": "sub menu icon color",
+        "de": "Farbe des Untermenüsymbols",
+        "ru": "цвет значка подменю",
+        "pt": "cor do ícone do submenu",
+        "nl": "submenu pictogram kleur",
+        "fr": "couleur de l'icône du sous-menu",
+        "it": "colore dell'icona del sottomenu",
+        "es": "color del icono del submenú",
+        "pl": "kolor ikony podmenu",
+        "zh-cn": "子菜单图标颜色"
+    },
+    "subIconDrawerColorSelected": {
+        "en": "sub menu icon color activ",
+        "de": "Farbe des aktiven Untermenüsymbols",
+        "ru": "цвет значка подменю актив",
+        "pt": "submenu ícone cor ativ",
+        "nl": "submenu pictogram kleur actief",
+        "fr": "couleur de l'icône du sous-menu activé",
+        "it": "attivazione del colore dell'icona del sottomenu",
+        "es": "submenú icono color activ",
+        "pl": "kolor ikony podmenu aktywny",
+        "zh-cn": "子菜单图标颜色激活"
+    },
+    "topAppBarIconColor": {
+        "en": "icon color",
+        "de": "Symbolfarbe",
+        "ru": "цвет значка",
+        "pt": "cor do ícone",
+        "nl": "pictogram kleur",
+        "fr": "couleur de l'icône",
+        "it": "colore dell'icona",
+        "es": "color del icono",
+        "pl": "kolor ikony",
+        "zh-cn": "图标颜色"
+    },
+    "setValueOnMenuToggleClick": {
+        "en": "set value on click at item that toggle submenu",
+        "de": "Wert auch schreiben, wenn Eintrag zum Untermenü umschalten gedrückt wird",
+        "ru": "установить значение при щелчке по элементу, который переключает подменю",
+        "pt": "defina o valor ao clicar no item que alterna o submenu",
+        "nl": "waarde instellen bij klikken op item dat submenu schakelt",
+        "fr": "définir la valeur en cliquant sur l'élément qui bascule le sous-menu",
+        "it": "imposta il valore al clic sull'elemento che attiva/disattiva il sottomenu",
+        "es": "establecer valor al hacer clic en el elemento que alterna el submenú",
+        "pl": "ustaw wartość po kliknięciu elementu, który przełącza podmenu",
+        "zh-cn": "单击切换子菜单的项目时设置值"
+    },
+    "drawerItemsDataMethod": {
+        "en": "input method for the navigation items",
+        "de": "Eingabemethode für die Navigationselemente",
+        "ru": "метод ввода для элементов навигации",
+        "pt": "método de entrada para os itens de navegação",
+        "nl": "invoermethode voor de navigatie-items",
+        "fr": "méthode de saisie pour les éléments de navigation",
+        "it": "metodo di input per gli elementi di navigazione",
+        "es": "método de entrada para los elementos de navegación",
+        "pl": "metoda wprowadzania elementów nawigacyjnych",
+        "zh-cn": "导航项的输入法"
+    },
+    "usePercentOfRow": {
+        "en": "use x percent of row",
+        "de": "x Prozent der Zeile verwenden",
+        "ru": "использовать x процентов строки",
+        "pt": "use x por cento da linha",
+        "nl": "gebruik x procent van rij",
+        "fr": "utiliser x pour cent de la ligne",
+        "it": "usa x percento di riga",
+        "es": "usar x por ciento de la fila",
+        "pl": "użyj x procent wiersza",
+        "zh-cn": "使用 x 行的百分比"
+    },
+    "selectedItemName_oid": {
+        "en": "Object Id for selected menu item id or name",
+        "de": "Objekt-ID für ausgewählte Menüelement-ID oder Name",
+        "ru": "Идентификатор объекта для идентификатора или имени выбранного пункта меню",
+        "pt": "Id do objeto para o id ou nome do item de menu selecionado",
+        "nl": "Object-ID voor geselecteerde menu-item-ID of naam",
+        "fr": "Id d'objet pour l'ID ou le nom de l'élément de menu sélectionné",
+        "it": "ID oggetto per l'ID o il nome della voce di menu selezionata",
+        "es": "ID de objeto para el nombre o la identificación del elemento de menú seleccionado",
+        "pl": "Identyfikator obiektu dla identyfikatora lub nazwy wybranego elementu menu",
+        "zh-cn": "所选菜单项 ID 或名称的对象 ID"
+    },
+    "permanentIfResolutionHigherThan": {
+        "en": "layout 'auto': layout auto change on resoltuion higher than",
+        "de": "Layout 'auto': automatische Änderung des Layouts bei Auflösung größer",
+        "ru": "макет 'auto': автоматическое изменение макета при разрешении выше, чем",
+        "pt": "layout 'auto': mudança automática de layout em resolução maior que",
+        "nl": "layout 'auto': layout automatisch wijzigen bij resolutie hoger dan",
+        "fr": "layout 'auto': layout auto change sur résolution supérieure à",
+        "it": "layout 'auto': modifica automatica del layout alla risoluzione maggiore di",
+        "es": "layout 'auto': cambio automático de diseño en una resolución superior a",
+        "pl": "układ 'auto': automatyczna zmiana układu przy rozdzielczości wyższej niż",
+        "zh-cn": "布局“自动”：分辨率高于分辨率时布局自动更改"
+    },
+    "menuId": {
+        "en": "menu item id",
+        "de": "Menüpunkt-ID",
+        "ru": "id пункта меню",
+        "pt": "id do item do menu",
+        "nl": "menu-item-ID",
+        "fr": "identifiant de l'élément de menu",
+        "it": "ID voce di menu",
+        "es": "ID de elemento de menú",
+        "pl": "identyfikator pozycji menu",
+        "zh-cn": "菜单项 ID"
+    },
+    "drawerItemsJsonString": {
+        "en": "JSON Sting for navigation items",
+        "de": "JSON-Sting für Navigationselemente",
+        "ru": "JSON Sting для элементов навигации",
+        "pt": "JSON Sting para itens de navegação",
+        "nl": "JSON Sting voor navigatie-items",
+        "fr": "JSON Sting pour les éléments de navigation",
+        "it": "JSON Sting per gli elementi di navigazione",
+        "es": "JSON Sting para elementos de navegación",
+        "pl": "JSON Sting dla elementów nawigacyjnych",
+        "zh-cn": "用于导航项目的 JSON Sting"
+    },
+    "headerTextColor": {
+        "en": "text color of header",
+        "de": "Textfarbe der Überschrift",
+        "ru": "цвет текста заголовка",
+        "pt": "cor do texto do cabeçalho",
+        "nl": "tekstkleur van kop",
+        "fr": "couleur du texte de l'en-tête",
+        "it": "colore del testo dell'intestazione",
+        "es": "color del texto del encabezado",
+        "pl": "kolor tekstu nagłówka",
+        "zh-cn": "标题的文字颜色"
+    },
+    "group_iconListHeader": {
+        "en": "headline",
+        "de": "Überschrift",
+        "ru": "Заголовок",
+        "pt": "Título",
+        "nl": "kop",
+        "fr": "Gros titre",
+        "it": "Titolo",
+        "es": "Titular",
+        "pl": "Nagłówek",
+        "zh-cn": "标题"
+    },
+    "headerImage": {
+        "en": "image of headline",
+        "de": "Bild der Überschrift",
+        "ru": "изображение заголовка",
+        "pt": "imagem do título",
+        "nl": "afbeelding van kop",
+        "fr": "image du titre",
+        "it": "immagine del titolo",
+        "es": "imagen del titular",
+        "pl": "obraz nagłówka",
+        "zh-cn": "标题图片"
+    },
+    "headerImageColor": {
+        "en": "image color of headline",
+        "de": "Bildfarbe der Überschrift",
+        "ru": "цвет изображения заголовка",
+        "pt": "cor da imagem do título",
+        "nl": "afbeeldingskleur van kop",
+        "fr": "couleur de l'image du titre",
+        "it": "colore dell'immagine del titolo",
+        "es": "color de la imagen del título",
+        "pl": "kolor obrazu nagłówka",
+        "zh-cn": "标题的图像颜色"
+    },
+    "headerImageHeight": {
+        "en": "image size of headline",
+        "de": "Bildgröße der Überschrift",
+        "ru": "размер изображения заголовка",
+        "pt": "tamanho da imagem do título",
+        "nl": "afbeeldingsgrootte van kop",
+        "fr": "taille de l'image du titre",
+        "it": "dimensione dell'immagine del titolo",
+        "es": "tamaño de la imagen del título",
+        "pl": "rozmiar obrazu nagłówka",
+        "zh-cn": "标题的图像大小"
     }
 };

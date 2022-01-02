@@ -10,157 +10,166 @@ vis.binds.materialdesign.card = {
         try {
 
             let card = '';
+            let jsonData = vis.binds.materialdesign.card.parseJson(data);
+            let cardData = vis.binds.materialdesign.card.getCardData(data, jsonData);
 
-            let cardStyle = '';
-            if (data.cardStyle !== 'default') {
-                cardStyle = 'mdc-card--outlined';
-            }
 
-            let titleFontSize = myMdwHelper.getFontSize(data.titleLayout);
-            let subTitleFontSize = myMdwHelper.getFontSize(data.subtitleLayout);
-            let textFontSize = myMdwHelper.getFontSize(data.textFontSize);
+            if (cardData) {
+                let cardStyle = '';
+                if (data.cardStyle !== 'default') {
+                    cardStyle = 'mdc-card--outlined';
+                }
 
-            let labelTextHeight = myMdwHelper.getValueFromData(data.labelTextHeight, '', 'height: ', 'px;');
-            let labelSubTextHeight = myMdwHelper.getValueFromData(data.labelSubTextHeight, '', 'height: ', 'px;');
+                let titleFontSize = myMdwHelper.getFontSize(data.titleLayout);
+                let subTitleFontSize = myMdwHelper.getFontSize(data.subtitleLayout);
+                let textFontSize = myMdwHelper.getFontSize(data.textFontSize);
 
-            let showImage = 'display: none;';
-            if (myMdwHelper.getValueFromData(data.image, null) !== null) {
-                showImage = '';
-            }
+                let labelTextHeight = myMdwHelper.getValueFromData(data.labelTextHeight, '', 'height: ', 'px;');
+                let labelSubTextHeight = myMdwHelper.getValueFromData(data.labelSubTextHeight, '', 'height: ', 'px;');
 
-            let showTitleSection = 'display: none;';
-            if (myMdwHelper.getValueFromData(data.title, null) != null || myMdwHelper.getValueFromData(data.subtitle, null) != null) {
-                showTitleSection = '';
-            }
+                let showImage = 'display: none;';
+                if (cardData.image) {
+                    showImage = '';
+                }
 
-            let htmlLayout = '';
-            if (data.htmlLayout === 'custom') {
-                htmlLayout = 'card-custom-body';
-            } else {
-                htmlLayout = 'mdc-typography mdc-typography--' + data.htmlLayout;
-            }
+                let showTitleSection = 'display: none;';
+                if (cardData.title || cardData.subTitle) {
+                    showTitleSection = '';
+                }
 
-            let titleSection = []
-            if (data.showTitle || data.showSubTitle) {
-                if (data.cardLayout !== 'Horizontal') {
-                    titleSection.push(`<div class="materialdesign-html-card card-title-section" style="${showTitleSection}">`)
-
+                let htmlLayout = '';
+                if (data.htmlLayout === 'custom') {
+                    htmlLayout = 'card-custom-body';
                 } else {
-                    // Horizontal Layout
-                    titleSection.push(`<div class="materialdesign-html-card card-title-section">`)
+                    htmlLayout = 'mdc-typography mdc-typography--' + data.htmlLayout;
                 }
 
-                if (data.showTitle) {
-                    titleSection.push(`<div class="materialdesign-html-card card-title ${titleFontSize.class}" style="${titleFontSize.style}">${myMdwHelper.getValueFromData(data.title, '')}</div>`);
-                }
-                if (data.showSubTitle) {
-                    titleSection.push(`<div class="materialdesign-html-card card-subtitle ${subTitleFontSize.class}" style="${subTitleFontSize.style}${labelSubTextHeight}">${myMdwHelper.getValueFromData(data.subtitle, '')}</div>`);
+                let titleSection = []
+                if (data.showTitle || data.showSubTitle) {
+                    if (data.cardLayout !== 'Horizontal') {
+                        titleSection.push(`<div class="materialdesign-html-card card-title-section" style="${showTitleSection}">`)
+
+                    } else {
+                        // Horizontal Layout
+                        titleSection.push(`<div class="materialdesign-html-card card-title-section">`)
+                    }
+
+                    if (data.showTitle) {
+                        titleSection.push(`<div class="materialdesign-html-card card-title ${titleFontSize.class}" style="${titleFontSize.style}">${cardData.title}</div>`);
+                    }
+                    if (data.showSubTitle) {
+                        titleSection.push(`<div class="materialdesign-html-card card-subtitle ${subTitleFontSize.class}" style="${subTitleFontSize.style}${labelSubTextHeight}">${cardData.subTitle}</div>`);
+                    }
+
+                    titleSection.push(`</div>`);
                 }
 
-                titleSection.push(`</div>`);
-            }
-
-            let textSection = '';
-            if (data.showText) {
-                textSection = `<div class="materialdesign-html-card card-text-section" style="${myMdwHelper.getBooleanFromData(data.showScrollbar, true) ? 'overflow: auto;': ''}">
-                                    <div class="materialdesign-html-card ${textFontSize.class}" style="${textFontSize.style}${labelTextHeight}">${myMdwHelper.getValueFromData(data.html, '')}</div>
+                let textSection = '';
+                if (data.showText) {
+                    textSection = `<div class="materialdesign-html-card card-text-section" style="${myMdwHelper.getBooleanFromData(data.showScrollbar, true) ? 'overflow: auto;' : ''}">
+                                    <div class="materialdesign-html-card ${textFontSize.class} card-body" style="${textFontSize.style}${labelTextHeight}">${cardData.body}</div>
                                 </div>`
-            }
+                }
 
-            if (data.cardLayout === 'Basic') {
-                card = `<div class="mdc-card__media mdc-card__media--16-9" style="background-image: url(${data.image});${showImage}"></div>
+                if (data.cardLayout === 'Basic') {
+                    card = `<div class="mdc-card__media mdc-card__media--16-9" style="background-image: url(${cardData.image});${showImage}"></div>
                         ${titleSection.join('')}
                         ${textSection}`
-            } else if (data.cardLayout === 'BasicHeader') {
-                card = `${titleSection.join('')}
-                        <div class="materialdesign-html-card mdc-card__media mdc-card__media--16-9" style="background-image: url(${data.image});${showImage}"></div>
+                } else if (data.cardLayout === 'BasicHeader') {
+                    card = `${titleSection.join('')}
+                        <div class="materialdesign-html-card mdc-card__media mdc-card__media--16-9" style="background-image: url(${cardData.image});${showImage}"></div>
                         ${textSection}`
-            } else if (data.cardLayout === 'BasicHeaderOverlay') {
-                card = `<div class="mdc-card__media mdc-card__media--16-9" style="background-image: url(${data.image});${showImage}">
+                } else if (data.cardLayout === 'BasicHeaderOverlay') {
+                    card = `<div class="mdc-card__media mdc-card__media--16-9" style="background-image: url(${cardData.image});${showImage}">
                             <div class="materialdesign-html-card mdc-card__media-content">
                                 ${titleSection.join('')}
                             </div>
                         </div>
                         ${textSection}`
-            } else if (data.cardLayout === 'Horizontal') {
-                card = `<div class="materialdesign-html-card horizontal-container" style="${showTitleSection}">
-                            <div class="materialdesign-html-card mdc-card__media mdc-card__media--square" style="background-image: url(${data.image});${showImage}"></div>
+                } else if (data.cardLayout === 'Horizontal') {
+                    card = `<div class="materialdesign-html-card horizontal-container" style="${showTitleSection}">
+                            <div class="materialdesign-html-card mdc-card__media mdc-card__media--square" style="background-image: url(${cardData.image});${showImage}"></div>
                             <div>
                                 ${titleSection.join('')}
                                 ${textSection}
                             </div>
                         </div>`
+                }
+
+                return { card: card, style: cardStyle }
             }
-
-            return { card: card, style: cardStyle }
-
         } catch (ex) {
             console.error(`[Card - ${data.wid}] initialize: error:: ${ex.message}, stack: ${ex.stack}`);
         }
     },
     handler: function (el, data) {
         let widgetName = 'HTML Card';
-        let themeTriggerClass = '.materialdesign-widget.materialdesign-html-card'
+
 
         try {
             let $this = $(el);
 
-            myMdwHelper.subscribeThemesAtRuntimee(data, widgetName, themeTriggerClass, function () {
-                init();
+            myMdwHelper.subscribeThemesAtRuntime(data, widgetName);
+
+            let card = $this.context;
+
+            // mdc.ripple.MDCRipple.attachTo($this.find('.mdc-card__primary-action').get(0));
+
+            $(document).on("mdwSubscribe", function (e, oids) {
+                if (myMdwHelper.isLayoutRefreshNeeded(widgetName, data, oids, data.debug)) {
+                    setLayout();
+                }
             });
 
-            function init() {
-                let card = $this.context;
-
-                // mdc.ripple.MDCRipple.attachTo($this.find('.mdc-card__primary-action').get(0));
-
-
-                vis.states.bind('vis-materialdesign.0.colors.darkTheme.val', function (e, newVal, oldVal) {
-                    setLayout();
-                });
-
-                vis.states.bind('vis-materialdesign.0.lastchange.val', function (e, newVal, oldVal) {
-                    setLayout();
-                });
-
-                $(themeTriggerClass).on(`mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}`, function () {
-                    if (data.debug) console.log(`[${widgetName} - ${data.wid}] event received: 'mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}'`);
-                    // $(themeTriggerClass).off(`mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}`);
-                    setLayout();
-                });
-
+            vis.states.bind('vis-materialdesign.0.colors.darkTheme.val', function (e, newVal, oldVal) {
                 setLayout();
-                function setLayout() {
-                    let colorBackground = myMdwHelper.getValueFromData(data.colorBackground, '');
-                    card.style.setProperty("--materialdesign-color-card-background", colorBackground);
-                    card.style.setProperty("--materialdesign-color-card-title-section-background", myMdwHelper.getValueFromData(data.colorTitleSectionBackground, colorBackground));
-                    card.style.setProperty("--materialdesign-color-card-text-section-background", myMdwHelper.getValueFromData(data.colorTextSectionBackground, colorBackground));
+            });
 
-                    card.style.setProperty("--materialdesign-color-card-title", myMdwHelper.getValueFromData(data.colorTitle, ''));
-                    card.style.setProperty("--materialdesign-color-card-sub-title", myMdwHelper.getValueFromData(data.colorSubtitle, ''));
-                    card.style.setProperty("--materialdesign-color-card--text-section-text", myMdwHelper.getValueFromData(data.colorBody, ''));
+            vis.states.bind('vis-materialdesign.0.lastchange.val', function (e, newVal, oldVal) {
+                setLayout();
+            });
 
-                    card.style.setProperty("--materialdesign-font-card-title", myMdwHelper.getValueFromData(data.titleFontFamily, ''));
-                    card.style.setProperty("--materialdesign-font-card-sub-title", myMdwHelper.getValueFromData(data.subTitleFontFamily, ''));
-                    card.style.setProperty("--materialdesign-font-card--text-section-text", myMdwHelper.getValueFromData(data.textFontFamily, ''));
+            vis.states.bind(data.json_string_oid + '.val', function (e, newVal, oldVal) {
+                let jsonData = vis.binds.materialdesign.card.parseJson(data, oldVal);
+                let cardData = vis.binds.materialdesign.card.getCardData(data, jsonData);
 
-                    let titleFontSize = myMdwHelper.getFontSize(data.titleLayout);
-                    if (titleFontSize && titleFontSize.style) {
-                        $this.find('.card-title').css('font-size', myMdwHelper.getStringFromNumberData(data.titleLayout, 'inherit', '', 'px'));
-                    }
+                $this.find('.card-title').html(cardData.title);
+                $this.find('.card-subtitle').html(cardData.subTitle);
+                $this.find('.card-body').html(cardData.body);
+                $this.find('.mdc-card__media').css('background-image', `url(${cardData.image})`);
+            });
 
-                    let subTitleFontSize = myMdwHelper.getFontSize(data.subtitleLayout);
-                    if (subTitleFontSize && subTitleFontSize.style) {
-                        $this.find('.card-subtitle').css('font-size', myMdwHelper.getStringFromNumberData(data.subtitleLayout, 'inherit', '', 'px'));
-                    }
+            setLayout();
+            function setLayout() {
+                let colorBackground = myMdwHelper.getValueFromData(data.colorBackground, '');
+                card.style.setProperty("--materialdesign-color-card-background", colorBackground);
+                card.style.setProperty("--materialdesign-color-card-title-section-background", myMdwHelper.getValueFromData(data.colorTitleSectionBackground, colorBackground));
+                card.style.setProperty("--materialdesign-color-card-text-section-background", myMdwHelper.getValueFromData(data.colorTextSectionBackground, colorBackground));
 
-                    let textFontSize = myMdwHelper.getFontSize(data.textFontSize);
-                    if (textFontSize && textFontSize.style) {
-                        $this.find('.card-text-section').css('font-size', myMdwHelper.getStringFromNumberData(data.textFontSize, 'inherit', '', 'px'));
-                    }
+                card.style.setProperty("--materialdesign-color-card-title", myMdwHelper.getValueFromData(data.colorTitle, ''));
+                card.style.setProperty("--materialdesign-color-card-sub-title", myMdwHelper.getValueFromData(data.colorSubtitle, ''));
+                card.style.setProperty("--materialdesign-color-card--text-section-text", myMdwHelper.getValueFromData(data.colorBody, ''));
 
-                    vis.binds.materialdesign.card.backgroundImageRefresh(el, data, `url(${data.image}`, data.refreshInterval, data.refreshOnWakeUp, data.refreshOnViewChange, false);
+                card.style.setProperty("--materialdesign-font-card-title", myMdwHelper.getValueFromData(data.titleFontFamily, ''));
+                card.style.setProperty("--materialdesign-font-card-sub-title", myMdwHelper.getValueFromData(data.subTitleFontFamily, ''));
+                card.style.setProperty("--materialdesign-font-card--text-section-text", myMdwHelper.getValueFromData(data.textFontFamily, ''));
+
+                let titleFontSize = myMdwHelper.getFontSize(data.titleLayout);
+                if (titleFontSize && titleFontSize.style) {
+                    $this.find('.card-title').css('font-size', myMdwHelper.getStringFromNumberData(data.titleLayout, 'inherit', '', 'px'));
                 }
+
+                let subTitleFontSize = myMdwHelper.getFontSize(data.subtitleLayout);
+                if (subTitleFontSize && subTitleFontSize.style) {
+                    $this.find('.card-subtitle').css('font-size', myMdwHelper.getStringFromNumberData(data.subtitleLayout, 'inherit', '', 'px'));
+                }
+
+                let textFontSize = myMdwHelper.getFontSize(data.textFontSize);
+                if (textFontSize && textFontSize.style) {
+                    $this.find('.card-text-section').css('font-size', myMdwHelper.getStringFromNumberData(data.textFontSize, 'inherit', '', 'px'));
+                }
+
+                vis.binds.materialdesign.card.backgroundImageRefresh(el, data, `url(${data.image}`, data.refreshInterval, data.refreshOnWakeUp, data.refreshOnViewChange, false);
             }
         } catch (ex) {
             console.error(`[${widgetName} - ${data.wid}] handler: error: ${ex.message}, stack: ${ex.stack}`);
@@ -218,6 +227,50 @@ vis.binds.materialdesign.card = {
                     }, myMdwHelper.getNumberFromData(data.refresh_oid_delay, 250));
                 }
             });
+        }
+    },
+    parseJson(data, oldVal = undefined) {
+        let jsonData = null;
+        if (data.listItemDataMethod === 'jsonStringObject') {
+            if (vis.states.attr(data.json_string_oid + '.val') && vis.states.attr(data.json_string_oid + '.val') !== 'null') {
+                try {
+                    jsonData = JSON.parse(vis.states.attr(data.json_string_oid + '.val'));
+                } catch (err) {
+                    jsonData = {
+                        title: `<font color=\"red\"><b>${_("Error in JSON string")}</b></font>`,
+                        body: `<label style="word-wrap: break-word; white-space: normal;">${err.message}</label>`
+                    };
+                    console.error(`[Card - ${data.wid}] initialize cannot parse json string! Error: ${err.message}`);
+                }
+            } else {
+                jsonData = {
+                    body: `<font color=\"red\"><b>${_("datapoint '{0}' not exist!").replace('{0}', data.json_string_oid)}</b></font>`,
+                };
+                console.warn(`[Card - ${data.wid}] initialize ${_("datapoint '{0}' not exist!").replace('{0}', data.json_string_oid)}`);
+            }
+        }
+
+        return jsonData;
+    },
+    getCardData(data, jsonData) {
+        if (myMdwHelper.getValueFromData(data.listItemDataMethod, 'inputPerEditor') === 'inputPerEditor') {
+            return {
+                title: myMdwHelper.getValueFromData(data.title, ''),
+                subTitle: myMdwHelper.getValueFromData(data.subtitle, ''),
+                body: myMdwHelper.getValueFromData(data.html, ''),
+                image: myMdwHelper.getValueFromData(data.image, '')
+            }
+        } else {
+            if (jsonData) {
+                return {
+                    title: myMdwHelper.getValueFromData(jsonData.title, ''),
+                    subTitle: myMdwHelper.getValueFromData(jsonData.subtitle, ''),
+                    body: myMdwHelper.getValueFromData(jsonData.body, ''),
+                    image: myMdwHelper.getValueFromData(jsonData.image, '')
+                }
+            } else {
+                return undefined
+            }
         }
     }
 };

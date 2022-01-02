@@ -8,6 +8,27 @@
 let myMdwMaterialDesignIconsList = [];
 
 vis.binds.materialdesign.viseditor = {
+    themeChangeHandler: async function () {
+        let oldDarkTheme = await myMdwHelper.getStateAsync('vis-materialdesign.0.colors.darkTheme');
+        let oldLastChange = await myMdwHelper.getStateAsync('vis-materialdesign.0.lastchange');
+        let lastTap = new Date().getTime();
+
+        // $('#panel_body').on('tapstart', async function () {
+            $('#vis_container, .tab_attr.ui-widget-content').on('mouseenter', async function() {
+            if (new Date().getTime() - lastTap > 2000) {
+                let darkTheme = await myMdwHelper.getStateAsync('vis-materialdesign.0.colors.darkTheme');
+                let lastChange = await myMdwHelper.getStateAsync('vis-materialdesign.0.lastchange');
+
+                if (oldDarkTheme.val !== darkTheme.val || oldLastChange.lc !== lastChange.lc) {
+                    myMdwHelper.bindCssThemeVariables();
+                    oldDarkTheme = darkTheme;
+                    oldLastChange = lastChange;
+                }
+
+                lastTap = new Date().getTime();
+            }
+        });
+    },
     manualLink: function (widAttr, data) {
         try {
             let url = 'https://github.com/Scrounger/ioBroker.vis-materialdesign#iobrokervis-materialdesign';
@@ -354,10 +375,16 @@ vis.binds.materialdesign.viseditor = {
                         var wdata = $(this).data('wdata');
                         var defPath = ('/' + (that.conn.namespace ? that.conn.namespace + '/' : '') + that.projectPrefix + 'img/');
 
+                        var allowedFileExtensions = ['gif', 'png', 'bmp', 'jpg', 'jpeg', 'tif', 'svg'];
+
                         var current = that.widgets[wdata.widgets[0]].data[wdata.attr];
                         //workaround, that some widgets calling direct the img/picure.png without /vis/
-                        if (current && current.substring(0, 4) === 'img/') {
-                            current = '/vis/' + current;
+                        if (allowedFileExtensions.some(function (v) { return current.indexOf(`.${v}`) >= 0; })) {
+                            if (current && current.substring(0, 4) === 'img/') {
+                                current = '/vis/' + current;
+                            }
+                        } else {
+                            current = defPath;
                         }
 
                         $.fm({
@@ -365,7 +392,7 @@ vis.binds.materialdesign.viseditor = {
                             defaultPath: defPath,
                             path: current || defPath,
                             uploadDir: '/' + (that.conn.namespace ? that.conn.namespace + '/' : ''),
-                            fileFilter: ['gif', 'png', 'bmp', 'jpg', 'jpeg', 'tif', 'svg'],
+                            fileFilter: allowedFileExtensions,
                             folderFilter: false,
                             mode: 'open',
                             view: 'prev',
@@ -882,6 +909,7 @@ vis.binds.materialdesign.viseditor = {
     useTheme: function (widAttr, data) {
         try {
             var that = vis;
+            let theme = data[1] ? data[1] : undefined;
 
             // options = {min: ?,max: ?,step: ?}
             // Select
@@ -918,26 +946,38 @@ vis.binds.materialdesign.viseditor = {
                                                         let inspect = $(`#inspect_${obj.desc}`);
 
                                                         if (inspect && inspect.length > 0) {
-                                                            let mdwThemeOid = generateMdwThemeOid(themeType, obj.id);
+                                                            await setElementValue(inspect, themeType, obj.id, theme);
+                                                            // let mdwThemeOid = generateMdwThemeOid(themeType, obj.id);
 
-                                                            if (inspect.val() !== mdwThemeOid) {
-                                                                inspect.val(mdwThemeOid).trigger('change');
-                                                            }
+                                                            // console.warn(obj.desc);
+                                                            // console.warn(await getStateValue(themeType, obj.id, 'light'));
+
+
+                                                            // if (inspect.val() !== mdwThemeOid) {
+                                                            //     inspect.val(mdwThemeOid).trigger('change');
+                                                            // }
                                                         } else {
                                                             // wir haben ein Element mit count
                                                             inspect = $(`input[id^='inspect_${obj.desc}']`);
 
                                                             if (inspect && inspect.length > 0) {
-                                                                inspect.each(function (i, el) {
+                                                                inspect.each(async function (i, el) {
 
                                                                     // Prüfen ob am Ende der id wirklich nur eine number ist
                                                                     if (!isNaN(parseFloat(el.id.replace(`inspect_${obj.desc}`, '')))) {
                                                                         let $el = $(el);
-                                                                        let mdwThemeOid = generateMdwThemeOid(themeType, obj.id);
+                                                                        await setElementValue($el, themeType, obj.id, theme);
 
-                                                                        if ($el.val() !== mdwThemeOid) {
-                                                                            $el.val(mdwThemeOid).trigger('change');
-                                                                        }
+
+                                                                        // let mdwThemeOid = generateMdwThemeOid(themeType, obj.id);
+
+                                                                        // console.warn(obj.desc);
+                                                                        // console.warn(await getStateValue(themeType, obj.id, 'light'));
+
+
+                                                                        // if ($el.val() !== mdwThemeOid) {
+                                                                        //     $el.val(mdwThemeOid).trigger('change');
+                                                                        // }
                                                                     }
                                                                 });
                                                             }
@@ -971,6 +1011,49 @@ vis.binds.materialdesign.viseditor = {
                                     return `#mdwTheme:vis-materialdesign.0.${themeType}.${id.replace('light.', '')}`;
                                 } else {
                                     return `#mdwTheme:vis-materialdesign.0.${themeType}.${id}`;
+                                }
+                            }
+
+                            function generateCssThemeVar(themeType, id) {
+                                if (themeType === 'colors') {
+                                    return `var(--materialdesign-widget-theme-color-${id.replace('light.', '').replace('dark.', '').replace(/\./g, '-').replace(/_/g, '-')})`;
+                                } else if (themeType === 'fonts') {
+                                    return `var(--materialdesign-widget-theme-font-${id.replace(/\./g, '-').replace(/_/g, '-')})`;
+                                } else {
+                                    return `var(--materialdesign-widget-theme-font-size-${id.replace(/\./g, '-').replace(/_/g, '-')})`;
+                                }
+                            }
+
+                            async function getStateValue(themeType, id, theme) {
+                                let stateId = `vis-materialdesign.0.${themeType}.${id}`;
+
+                                if (theme === 'dark') {
+                                    stateId = `vis-materialdesign.0.${themeType}.${id.replace('light.', 'dark.')}`;
+                                }
+
+                                let state = await myMdwHelper.getStateAsync(stateId);
+
+                                if (state) {
+                                    return state.val;
+                                } else {
+                                    console.warn(`useTheme: state '${stateId}' is undefined!`);
+                                    return '';
+                                }
+                            }
+
+                            async function setElementValue(element, themeType, id, theme) {
+                                if (!theme) {
+                                    let mdwThemeOid = generateCssThemeVar(themeType, id);
+
+                                    if (element.val() !== mdwThemeOid) {
+                                        element.val(mdwThemeOid).trigger('change');
+                                    }
+                                } else {
+                                    let val = await getStateValue(themeType, id, theme);
+
+                                    if (element.val() !== val) {
+                                        element.val(val).trigger('change');
+                                    }
                                 }
                             }
                         } else {

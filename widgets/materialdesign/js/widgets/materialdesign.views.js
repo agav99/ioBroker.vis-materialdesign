@@ -35,7 +35,7 @@ vis.binds.materialdesign.views = {
 
                 viewsList.push(`
                     <div 
-                        class="materialdesign-masonry-item" id="masonry_item_${i}" itemindex="${i}" sortOrder="${myMdwHelper.getNumberFromData(data.attr('viewSortOrder' + i), i)}" visibilityOid="${data.attr('visibilityOid' + i)}" style="${viewWidth}; display: none; ${myMdwHelper.getValueFromData(data.attr('View' + i), undefined) ? viewHeight > 0 ? `height: ${viewHeight}px;` : '' : 'height: 100px;'}">
+                        class="materialdesign-masonry-item" id="${data.wid}-masonry_item_${i}" itemindex="${i}" sortOrder="${myMdwHelper.getNumberFromData(data.attr('viewSortOrder' + i), i)}" visibilityOid="${data.attr('visibilityOid' + i)}" style="${viewWidth}; display: none; ${myMdwHelper.getValueFromData(data.attr('View' + i), undefined) ? viewHeight > 0 ? `height: ${viewHeight}px;` : '' : 'height: 100px;'}">
                             ${(vis.editMode) ? `<div class="editmode-helper" style="border-style: dashed; border-width: 2px; border-color: #44739e; ${myMdwHelper.getValueFromData(data.attr('View' + i), undefined) ? viewHeight > 0 ? `height: ${viewHeight}px;` : '' : 'height: 100px;'}"></div>` : ''}
                             <div data-vis-contains="${data.attr('View' + i)}" class="vis-widget-body vis-view-container">
                             </div>
@@ -106,17 +106,17 @@ vis.binds.materialdesign.views = {
             }
 
             function handleWidget() {
-                myMdwHelper.waitForElement($this, `#masonry_item_${0}`, data.wid, 'Masonry', function () {
+                myMdwHelper.waitForElement($this, `#${data.wid}-masonry_item_${0}`, data.wid, 'Masonry', function () {
                     myMdwHelper.waitForRealWidth($this.context, data.wid, 'Masonry', function () {
                         var currentWidgetWidth = $this.width();
 
                         myMdwHelper.calcChecker(getComputedStyle($this.context).width, data.wid, 'Masonry');
 
-                        $(window).resize(function () {
+                        $(window).on('resize', function () {
                             // resize event
                             var widgetWidth = $this.width();
 
-                            if (currentWidgetWidth !== widgetWidth) {
+                            if (currentWidgetWidth !== widgetWidth && widgetWidth > 100) {
                                 currentWidgetWidth = widgetWidth;
                                 setColumns();
                                 setViewVisibilityByCondition(currentWidgetWidth);
@@ -207,27 +207,30 @@ vis.binds.materialdesign.views = {
 
             function setViewVisibilityByCondition(currentWidgetWidth) {
                 for (var i = 0; i <= data.countViews; i++) {
+                    var $view = $('#visview_' + data.attr('View' + i));
+                    $view.data('persistent', true);
+
                     let lessThan = myMdwHelper.getNumberFromData(data.attr('visibleResolutionLessThan' + i), 50000);
                     let greaterThan = myMdwHelper.getNumberFromData(data.attr('visibleResolutionGreaterThan' + i), 0);
 
                     let val = vis.states.attr(data.attr('visibilityOid' + i) + '.val');
-                    let visibility = myMdwHelper.getVisibility(val, 'visibilityOid' + i, data.attr('visibilityCondition' + i), data.attr('visibilityConditionValue' + i));
+                    let visibility = myMdwHelper.getVisibility(val, data.attr('visibilityOid' + i), data.attr('visibilityCondition' + i), data.attr('visibilityConditionValue' + i));
 
                     if (currentWidgetWidth < greaterThan) {
-                        $this.find(`#masonry_item_${i}`).hide();
+                        $this.find(`#${data.wid}-masonry_item_${i}`).hide();
                     } else if (currentWidgetWidth >= greaterThan && currentWidgetWidth <= lessThan) {
                         if (visibility) {
-                            $this.find(`#masonry_item_${i}`).hide();
+                            $this.find(`#${data.wid}-masonry_item_${i}`).hide();
                         } else {
-                            $this.find(`#masonry_item_${i}`).show();
+                            $this.find(`#${data.wid}-masonry_item_${i}`).show();
                         }
                     } else if (currentWidgetWidth > lessThan) {
-                        $this.find(`#masonry_item_${i}`).hide();
+                        $this.find(`#${data.wid}-masonry_item_${i}`).hide();
                     } else {
                         if (visibility) {
-                            $this.find(`#masonry_item_${i}`).hide();
+                            $this.find(`#${data.wid}-masonry_item_${i}`).hide();
                         } else {
-                            $this.find(`#masonry_item_${i}`).show();
+                            $this.find(`#${data.wid}-masonry_item_${i}`).show();
                         }
                     }
                 }
@@ -256,7 +259,7 @@ vis.binds.materialdesign.views = {
                 let viewHeight = myMdwHelper.getNumberFromData(data.attr('viewsHeight' + i), 0);
 
                 viewsList.push(`
-                <div class="col col-${colSpan}" id="grid-item${i}" itemindex="${i}" sortOrder="${myMdwHelper.getNumberFromData(data.attr('viewSortOrder' + i), i)}" visibilityOid="${data.attr('visibilityOid' + i)}" style="display: none;">
+                <div class="col col-${colSpan}" id="${data.wid}-grid-item${i}" itemindex="${i}" sortOrder="${myMdwHelper.getNumberFromData(data.attr('viewSortOrder' + i), i)}" visibilityOid="${data.attr('visibilityOid' + i)}" style="display: none;">
                     ${(vis.editMode && !view) ? `<div class="editmode-helper" style="border-style: dashed; border-width: 2px; border-color: #44739e; position: relative; ${view ? viewHeight > 0 ? `height: ${viewHeight}px;` : '' : 'height: 100px;'}"></div>` : ''}
                     <div data-vis-contains="${view}" class="vis-widget-body vis-view-container" style="position: relative; ${view ? viewHeight > 0 ? `height: ${viewHeight}px;` : '' : 'height: 100px;'}">
                     </div>
@@ -327,17 +330,17 @@ vis.binds.materialdesign.views = {
             }
 
             function handleWidget() {
-                myMdwHelper.waitForElement($this, `#grid-item${0}`, data.wid, 'Grid ', function () {
+                myMdwHelper.waitForElement($this, `#${data.wid}-grid-item${0}`, data.wid, 'Grid ', function () {
                     myMdwHelper.waitForRealWidth($this.context, data.wid, 'Grid', function () {
                         var currentWidgetWidth = $this.width();
 
                         myMdwHelper.calcChecker(getComputedStyle($this.context).width, data.wid, 'Grid');
 
-                        $(window).resize(function () {
+                        $(window).on('resize', function () {
                             // resize event
                             var widgetWidth = $this.width();
 
-                            if (currentWidgetWidth !== widgetWidth) {
+                            if (currentWidgetWidth !== widgetWidth && currentWidgetWidth && widgetWidth > 100) {
                                 currentWidgetWidth = widgetWidth;
                                 setColumns();
                                 setViewVisibilityByCondition(currentWidgetWidth);
@@ -382,7 +385,7 @@ vis.binds.materialdesign.views = {
                                         colSpan = 12;
                                     }
 
-                                    $this.find(`#grid-item${i}`).removeClass().addClass(`col col-${colSpan}`);
+                                    $this.find(`#${data.wid}-grid-item${i}`).removeClass().addClass(`col col-${colSpan}`);
                                 }
 
                             } else if (currentWidgetWidth > handyPortraitWidth && currentWidgetWidth <= handyLandscapeWidth) {
@@ -401,7 +404,7 @@ vis.binds.materialdesign.views = {
                                         colSpan = 12;
                                     }
 
-                                    $this.find(`#grid-item${i}`).removeClass().addClass(`col col-${colSpan}`);
+                                    $this.find(`#${data.wid}-grid-item${i}`).removeClass().addClass(`col col-${colSpan}`);
                                 }
 
                             } else if (currentWidgetWidth > handyLandscapeWidth && currentWidgetWidth <= tabletPortraitWidth) {
@@ -420,7 +423,7 @@ vis.binds.materialdesign.views = {
                                         colSpan = 12;
                                     }
 
-                                    $this.find(`#grid-item${i}`).removeClass().addClass(`col col-${colSpan}`);
+                                    $this.find(`#${data.wid}-grid-item${i}`).removeClass().addClass(`col col-${colSpan}`);
                                 }
 
                             } else if (currentWidgetWidth > tabletPortraitWidth && currentWidgetWidth <= tabletLandscapeWidth) {
@@ -439,7 +442,7 @@ vis.binds.materialdesign.views = {
                                         colSpan = 12;
                                     }
 
-                                    $this.find(`#grid-item${i}`).removeClass().addClass(`col col-${colSpan}`);
+                                    $this.find(`#${data.wid}-grid-item${i}`).removeClass().addClass(`col col-${colSpan}`);
                                 }
 
                             } else if (currentWidgetWidth > tabletLandscapeWidth) {
@@ -458,7 +461,7 @@ vis.binds.materialdesign.views = {
                                         colSpan = 12;
                                     }
 
-                                    $this.find(`#grid-item${i}`).removeClass().addClass(`col col-${colSpan}`);
+                                    $this.find(`#${data.wid}-grid-item${i}`).removeClass().addClass(`col col-${colSpan}`);
                                 }
                             }
                         }
@@ -471,33 +474,342 @@ vis.binds.materialdesign.views = {
 
             function setViewVisibilityByCondition(currentWidgetWidth) {
                 for (var i = 0; i <= data.countViews; i++) {
+                    var $view = $('#visview_' + data.attr('View' + i));
+                    $view.data('persistent', true);
+
                     let lessThan = myMdwHelper.getNumberFromData(data.attr('visibleResolutionLessThan' + i), 50000);
                     let greaterThan = myMdwHelper.getNumberFromData(data.attr('visibleResolutionGreaterThan' + i), 0);
 
                     let val = vis.states.attr(data.attr('visibilityOid' + i) + '.val');
-                    let visibility = myMdwHelper.getVisibility(val, 'visibilityOid' + i, data.attr('visibilityCondition' + i), data.attr('visibilityConditionValue' + i));
+                    let visibility = myMdwHelper.getVisibility(val, data.attr('visibilityOid' + i), data.attr('visibilityCondition' + i), data.attr('visibilityConditionValue' + i));
 
                     if (currentWidgetWidth < greaterThan) {
-                        $this.find(`#grid-item${i}`).hide();
+                        $this.find(`#${data.wid}-grid-item${i}`).hide();
                     } else if (currentWidgetWidth >= greaterThan && currentWidgetWidth <= lessThan) {
                         if (visibility) {
-                            $this.find(`#grid-item${i}`).hide();
+                            $this.find(`#${data.wid}-grid-item${i}`).hide();
                         } else {
-                            $this.find(`#grid-item${i}`).show();
+                            $this.find(`#${data.wid}-grid-item${i}`).show();
                         }
                     } else if (currentWidgetWidth > lessThan) {
-                        $this.find(`#grid-item${i}`).hide();
+                        $this.find(`#${data.wid}-grid-item${i}`).hide();
                     } else {
                         if (visibility) {
-                            $this.find(`#grid-item${i}`).hide();
+                            $this.find(`#${data.wid}-grid-item${i}`).hide();
                         } else {
-                            $this.find(`#grid-item${i}`).show();
+                            $this.find(`#${data.wid}-grid-item${i}`).show();
                         }
                     }
                 }
             }
         } catch (ex) {
             console.error(`[Grid Views - ${data.wid}] error: ${ex.message}, stack: ${ex.stack}`);
+        }
+    },
+    advancedViewInWidget: function (el, data) {
+        let logPrefix = `[Advanced View in Widget - ${data.wid}]`
+
+        try {
+            let $this = $(el);
+
+            let val = vis.states.attr(data.oid + '.val');
+            let containerClass = 'vis-view-container';
+            let widgetName = 'Advanced View in Widget';
+
+            $this.append(`<div class="vis-widget-body ${containerClass}" data-vis-contains="${val}"><div>`);
+
+            vis.states.bind(data.oid + '.val', function (e, newVal, oldVal) {
+                bindView(newVal, oldVal);
+            });
+
+            if (vis.editMode) {
+                $this.append(`<div class="editmode-helper" style="top: 0px;"></div>`);
+            }
+
+            myMdwHelper.waitForOid(data.oid, data.wid, widgetName, function () {
+                val = vis.states.attr(data.oid + '.val');
+
+                bindView(val, undefined, true);
+
+                if (!vis.editMode) {
+                    renderOtherViewsOnInit(val);
+                }
+            });
+
+            function bindView(view, oldView, isInit = false) {
+
+                let $container = $this.find(`.${containerClass}`);
+
+                if (oldView) {
+                    if (data.debug) console.log(`${logPrefix} change view to '${view}' from '${oldView}'`);
+                } else {
+                    if (data.debug) console.log(`${logPrefix} starting to draw view '${view}'`);
+                }
+
+                if ($container.find(".vis-view,.container-error").length > 0) {
+                    renderView();
+                } else {
+                    if (data.slowConnection) {
+                        if (data.debug) console.log(`${logPrefix} slow connection option is activated`);
+                        myMdwHelper.waitForElement($container, "div.vis-view,.container-error", data.wid, widgetName, function () {
+                            renderView();
+                        }, 0, data.debug);
+                    } else {
+                        renderView();
+                    }
+                }
+
+                function renderView() {
+                    let $oldView = $container.find(`#visview_${oldView ? oldView : view},.container-error`);
+
+                    if (myMdwHelper.getNumberFromData(data.fadeOutDuration, 50) > 0) {
+                        // if ($oldView.css('display') !== 'none') {
+                        if (data.debug) console.log(`${logPrefix} old view '${oldView ? oldView : view}' is visible -> hide using fading`);
+                        $oldView.data('persistent', true).fadeOut(myMdwHelper.getNumberFromData(data.fadeOutDuration, 50), myMdwHelper.getValueFromData(data.fadeEffect, 'swing'), function () {
+                            showView();
+                        });
+                        // } else {
+                        //     showView();
+                        // }
+                    } else {
+                        // if ($oldView.css('display') !== 'none') {
+                        if (data.debug) console.log(`${logPrefix} old view '${oldView ? oldView : view}' is visible -> hide`);
+                        $oldView.data('persistent', true).hide();
+                        // }
+                        showView();
+                    }
+
+                    function showView() {
+                        if (!data.renderAlways) {
+                            $container.empty();
+
+                            if (data.debug) console.log(`${logPrefix} old view '${oldView}' cleared`);
+                        } else {
+                            if (isInit) {
+                                // wird nur beim init ausgeführt
+                                if (data.debug) console.log(`${logPrefix} renderAlways is '${data.renderAlways}', '${view}' show on widget init`);
+                                $container.find(`#visview_${view}`).show();
+                            }
+                        }
+
+                        if ($container.attr('data-vis-contains') !== view || $container.is(':empty')) {
+                            if (vis.views[view]) {
+
+                                let $hidedView = $container.find(`#visview_${view}`);
+                                if ($hidedView.length === 0) {
+
+                                    let $visContainerView = $('#vis_container').children(`#visview_${view}`);
+
+                                    if ($visContainerView.length === 0 || $container.is(':empty')) {
+                                        $container.attr('data-vis-contains', view);
+
+                                        vis.renderView(view, view, true, function (_view) {
+                                            if (myMdwHelper.getNumberFromData(data.fadeInDuration, 50) > 0) {
+                                                $('#visview_' + _view).appendTo($container).data('persistent', true).fadeIn(myMdwHelper.getNumberFromData(data.fadeInDuration, 50), myMdwHelper.getValueFromData(data.fadeEffect, 'swing'));
+                                            } else {
+                                                $('#visview_' + _view).appendTo($container).data('persistent', true).show();
+                                            }
+
+                                            if (data.debug) console.log(`${logPrefix} new view '${view}' rendered`);
+                                        });
+                                    } else {
+                                        // View ist unter #vis-container verfügbar z.B. wenn in View in Widget 8
+                                        $container.attr('data-vis-contains', view);
+
+                                        setTimeout(function () {
+                                            // ToDo evtl. detach notwendig?
+                                            if (myMdwHelper.getNumberFromData(data.fadeInDuration, 50) > 0) {
+                                                $visContainerView.appendTo($container).data('persistent', true).fadeIn(myMdwHelper.getNumberFromData(data.fadeInDuration, 50), myMdwHelper.getValueFromData(data.fadeEffect, 'swing'));
+                                            } else {
+                                                $visContainerView.appendTo($container).data('persistent', true).show();
+                                            }
+                                        }, 1);
+
+                                        if (data.debug) console.log(`${logPrefix} show still rendered view '${view}' - found in parent view (renderAlways: ${data.renderAlways})`);
+                                    }
+                                } else {
+                                    // View existiert view in widget div
+                                    $container.attr('data-vis-contains', view);
+
+                                    setTimeout(function () {
+                                        if (myMdwHelper.getNumberFromData(data.fadeInDuration, 50) > 0) {
+                                            if ($hidedView.css('display') === 'none') {
+                                                $hidedView.data('persistent', true).fadeIn(myMdwHelper.getNumberFromData(data.fadeInDuration, 50), myMdwHelper.getValueFromData(data.fadeEffect, 'swing'));
+                                            }
+                                        } else {
+                                            if ($hidedView.css('display') === 'none') {
+                                                $hidedView.data('persistent', true).show();
+                                            }
+                                        }
+
+                                        if (data.debug) console.log(`${logPrefix} show still rendered view '${view}' (renderAlways: ${data.renderAlways})`);
+                                    }, 1);
+                                }
+                            } else {
+                                let $errorInfo = $container.find('.container-error');
+                                if (data.debug) {
+                                    if ($container.find('.container-error').length === 0) {
+                                        $('<span style="color: red" class="container-error">' + _('error: view not found.') + '</span>').appendTo($container).show();
+                                    } else {
+                                        $errorInfo.show();
+                                    }
+
+                                    console.warn(`${logPrefix} view '${view}' not existis!`);
+                                } else {
+                                    if ($container.find('.container-error').length === 0) {
+                                        $('<span class="container-error"></span>').appendTo($container).show();
+                                    } else {
+                                        $errorInfo.show();
+                                    }
+                                }
+
+                                $container.attr('data-vis-contains', 'Error');
+                            }
+                        }
+                    }
+                }
+            }
+
+            async function renderOtherViewsOnInit(viewOnInit) {
+                if (data.renderAlways) {
+                    if (myMdwHelper.getNumberFromData(data.countRenderViewsOnLoad, undefined) || myMdwHelper.getNumberFromData(data.countRenderViewsOnLoad, undefined) === 0) {
+
+                        myMdwHelper.waitForElement($this, `#visview_${viewOnInit}`, data.wid, widgetName, function () {
+                            let $container = $this.find(`.${containerClass}`);
+
+                            for (var i = 0; i <= data.countRenderViewsOnLoad; i++) {
+                                let index = i;
+
+                                setTimeout(function () {
+                                    let view = data.attr('View' + index);
+
+                                    if (view) {
+                                        if (vis.views[view]) {
+
+                                            let $hidedView = $container.find(`#visview_${view}`);
+                                            if ($hidedView.length === 0) {
+
+                                                vis.renderView(view, view, true, function (_view) {
+                                                    $('#visview_' + _view).appendTo($container).data('persistent', true);
+
+                                                    if (data.debug) console.log(`${logPrefix} renderOtherViewsOnInit: View[${index}] '${view}' rendered`);
+                                                });
+                                            } else {
+                                                if (data.debug) console.debug(`${logPrefix} renderOtherViewsOnInit: View[${index}] '${view}' still rendered`);
+                                            }
+                                        } else {
+                                            console.warn(`${logPrefix} renderOtherViewsOnInit: View[${index}] '${view}' not exists in VIS project!`);
+                                        }
+                                    } else {
+                                        console.warn(`${logPrefix} renderOtherViewsOnInit: View[${index}] has no value!`);
+                                    }
+                                }, (i + 1) * 200);
+                            }
+                        }, 0, data.debug);
+                    } else {
+                        console.warn(`${logPrefix} renderOtherViewsOnInit: renderAlways is '${data.renderAlways}' but no view counter is set!`);
+                    }
+                }
+            }
+        } catch (ex) {
+            console.error(`${logPrefix} error: ${ex.message}, stack: ${ex.stack}`);
+        }
+    },
+    advancedViewInWidget8: function (el, data) {
+        let widgetName = 'Advanced View in Widget 8';
+
+        try {
+            var $this = $(el);
+            let val = vis.states.attr(data.oid + '.val');
+            let containerClass = 'vis-view-container';
+
+            var timer = null;
+
+            var viewArr = [];
+            var i = 0;
+            while (data.attr('contains_view_' + i) !== undefined) {
+                viewArr.push(data.attr('contains_view_' + i));
+                i++;
+            }
+
+            $this.append(`${vis.editMode ? '<div class="editmode-helper" />' : ''}
+                    <div class="vis-widget-body">
+                        <div class="${containerClass}" data-oid="${data.oid}" data-vis-contains="${viewArr[val]}" />
+                    </div>`);
+
+            let $container = $this.find(`.${containerClass}`);
+
+            function draw(val) {
+                timer = null;
+                var view = viewArr[val];
+                if (!data.persistent) {
+                    $container.parent().find('div.vis-view').fadeOut(myMdwHelper.getNumberFromData(data.fadeOutDuration, 50), function () {
+                        $container.parent().find('div.vis-view').remove();
+
+                        if (vis.views[view]) {
+                            vis.renderView(view, view, true, function (_view) {
+                                var $view = $('#visview_' + _view);
+                                $view.data('persistent', data.persistent).fadeIn(myMdwHelper.getNumberFromData(data.fadeInDuration, 50));
+                                if (!$container.find('#visview_' + _view).length) {
+                                    $view.appendTo($container).fadeIn(myMdwHelper.getNumberFromData(data.fadeInDuration, 50));
+                                }
+                            });
+                        }
+                        vis.destroyUnusedViews();
+                    });
+                } else {
+                    $container.parent().find('div.vis-view').fadeOut(myMdwHelper.getNumberFromData(data.fadeOutDuration, 50), function () {
+                        $container.parent().find('div.vis-view').hide().appendTo($('#vis_container'));
+
+                        if (vis.views[view]) {
+                            vis.renderView(view, view, true, function (_view) {
+                                var $view = $('#visview_' + _view);
+                                $view.data('persistent', data.persistent).fadeIn(myMdwHelper.getNumberFromData(data.fadeInDuration, 50));
+                                if (!$container.find('#visview_' + _view).length) {
+                                    $view.appendTo($container).fadeIn(myMdwHelper.getNumberFromData(data.fadeInDuration, 50));
+                                }
+                            });
+                        }
+                        vis.destroyUnusedViews();
+                    });
+                }
+            }
+
+            function onChange(e, newVal, oldVal) {
+                if (newVal === 'true' || newVal === true) newVal = 1;
+                if (newVal === 'false' || newVal === false) newVal = 0;
+                if (data.notIfInvisible && !$container.is(':visible')) {
+                    return;
+                }
+
+                if (newVal !== oldVal && viewArr[newVal] !== viewArr[oldVal]) {
+                    if (timer) {
+                        clearTimeout(timer)
+                    }
+                    timer = setTimeout(function () {
+
+                        draw(newVal);
+
+                    }, 50);
+                } else {
+                    // if (newVal !== oldVal) {
+                    //     console.warn('hier 2');
+                    //     $container.parent().find('div.vis-view').fadeOut(myMdwHelper.getNumberFromData(data.fadeOutDuration, 50)).fadeIn(myMdwHelper.getNumberFromData(data.fadeInDuration, 50))
+                    // }
+                }
+            }
+
+            if (data.oid) {
+                vis.states.bind(data.oid + '.val', onChange);
+
+                // remember all ids, that bound
+                $container.parent().parent()
+                    .data('bound', [data.oid + '.val'])
+                    // remember bind handler
+                    .data('bindHandler', onChange);
+            }
+        } catch (ex) {
+            console.error(`[${widgetName} - ${data.wid}] error: ${ex.message}, stack: ${ex.stack}`);
         }
     }
 };

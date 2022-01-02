@@ -8,17 +8,19 @@
 vis.binds.materialdesign.iconlist =
     function (el, data) {
         let widgetName = 'IconList';
-        let themeTriggerClass = '.materialdesign-widget.materialdesign-icon-list'
 
         try {
             let $this = $(el);
 
-            myMdwHelper.subscribeThemesAtRuntimee(data, widgetName, themeTriggerClass, function () {
+            myMdwHelper.subscribeThemesAtRuntime(data, widgetName);
+
+            if (data.listItemDataMethod === 'jsonStringObject') {
+                myMdwHelper.waitForOid(data.json_string_oid, data.wid, widgetName, init, 0, data.debug);
+            } else {
                 init();
-            });
+            }
 
             function init() {
-
                 let itemList = [];
                 let jsonData = null;
                 let oldJsonData = null;
@@ -36,8 +38,10 @@ vis.binds.materialdesign.iconlist =
 
                 if (oidsNeedSubscribe) {
                     myMdwHelper.subscribeStatesAtRuntime(data.wid, widgetName, function () {
+
                         appendContent();
                         eventListener();
+                        setLayout();
                     });
                 } else {
                     // json: hat keine objectIds / bindings bzw. bereits subscribed
@@ -55,11 +59,20 @@ vis.binds.materialdesign.iconlist =
                         myMdwHelper.subscribeStatesAtRuntime(data.wid, widgetName, function () {
                             appendContent(true, scrollTop, scrollLeft);
                             eventListener();
+                            setLayout(true);
                         });
                     } else {
                         // json: hat keine objectIds / bindings bzw. bereits subscribed
                         appendContent(true, scrollTop, scrollLeft);
                         eventListener();
+                        setLayout(true);
+                    }
+                });
+
+
+                $(document).on("mdwSubscribe", function (e, oids) {
+                    if (myMdwHelper.isLayoutRefreshNeeded(widgetName, data, oids, data.debug)) {
+                        setLayout(true);
                     }
                 });
 
@@ -71,14 +84,12 @@ vis.binds.materialdesign.iconlist =
                     setLayout(true);
                 });
 
-                $(themeTriggerClass).on(`mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}`, function () {
-                    if (data.debug) console.log(`[${widgetName} - ${data.wid}] event received: 'mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}'`);
-                    // $(themeTriggerClass).off(`mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}`);
-                    setLayout(true);
-                });
-
                 setLayout();
-                function setLayout(changed) {
+                function setLayout(changed = false) {
+                    $this.context.style.setProperty("--materialdesign-icon-list-header-font-color", myMdwHelper.getValueFromData(data.headerTextColor, ''));
+                    $this.context.style.setProperty("--materialdesign-icon-list-header-font-size", myMdwHelper.getStringFromNumberData(data.headerTextSize, 24, '', 'px'));
+                    $this.context.style.setProperty("--materialdesign-icon-list-header-font-family", myMdwHelper.getValueFromData(data.headerFontFamily, 'inherit'));
+
                     $this.context.style.setProperty("--materialdesign-icon-list-background", myMdwHelper.getValueFromData(data.containerBackgroundColor, ''));
 
                     $this.context.style.setProperty("--materialdesign-icon-list-items-per-row", myMdwHelper.getNumberFromData(data.maxItemsperRow, 1));
@@ -87,15 +98,16 @@ vis.binds.materialdesign.iconlist =
                     $this.context.style.setProperty("--materialdesign-icon-list-items-min-height", myMdwHelper.getNumberFromData(data.iconItemMinHeight, 0) + 'px');
                     $this.context.style.setProperty("--materialdesign-icon-list-items-gaps", myMdwHelper.getNumberFromData(data.itemGaps, 4) + 'px');
 
-                    $this.context.style.setProperty("--materialdesign-icon-list-items-text-font-size", myMdwHelper.getNumberFromData(data.labelFontSize, 14) + 'px');
+                    $this.context.style.setProperty("--materialdesign-icon-list-items-text-font-size", myMdwHelper.getStringFromNumberData(data.labelFontSize, 14, '', 'px'));
+
                     $this.context.style.setProperty("--materialdesign-icon-list-items-text-font-family", myMdwHelper.getValueFromData(data.labelFontFamily, 'inherit'));
                     $this.context.style.setProperty("--materialdesign-icon-list-items-text-font-color", myMdwHelper.getValueFromData(data.labelFontColor, ''));
 
-                    $this.context.style.setProperty("--materialdesign-icon-list-items-subText-font-size", myMdwHelper.getNumberFromData(data.subLabelFontSize, 12) + 'px');
+                    $this.context.style.setProperty("--materialdesign-icon-list-items-subText-font-size", myMdwHelper.getStringFromNumberData(data.subLabelFontSize, 12, '', 'px'));
                     $this.context.style.setProperty("--materialdesign-icon-list-items-subText-font-family", myMdwHelper.getValueFromData(data.subLabelFontFamily, 'inherit'));
                     $this.context.style.setProperty("--materialdesign-icon-list-items-subText-font-color", myMdwHelper.getValueFromData(data.subLabelFontColor, ''));
 
-                    $this.context.style.setProperty("--materialdesign-icon-list-items-value-font-size", myMdwHelper.getNumberFromData(data.valueFontSize, 12) + 'px');
+                    $this.context.style.setProperty("--materialdesign-icon-list-items-value-font-size", myMdwHelper.getStringFromNumberData(data.valueFontSize, 12, '', 'px'));
                     $this.context.style.setProperty("--materialdesign-icon-list-items-value-font-family", myMdwHelper.getValueFromData(data.valueFontFamily, 'inherit'));
                     $this.context.style.setProperty("--materialdesign-icon-list-items-value-font-color", myMdwHelper.getValueFromData(data.valueFontColor, ''));
 
@@ -136,15 +148,14 @@ vis.binds.materialdesign.iconlist =
                     countOfOldItems = 0;
 
                     if (data.listItemDataMethod === 'jsonStringObject') {
-                        if (vis.states.attr(data.json_string_oid + '.val') && vis.states.attr(data.json_string_oid + '.val') !== 'null') {
+                        let val = vis.states.attr(data.json_string_oid + '.val');
+                        if (val && val !== null && val !== 'null') {
                             try {
-                                jsonData = JSON.parse(vis.states.attr(data.json_string_oid + '.val'));
+                                jsonData = JSON.parse(val);
                                 if (oldVal) {
                                     oldJsonData = JSON.parse(oldVal);
                                     countOfOldItems = oldJsonData.length - 1;
                                 }
-
-                                countOfItems = jsonData.length - 1;
                             } catch (err) {
                                 jsonData = [
                                     {
@@ -152,9 +163,10 @@ vis.binds.materialdesign.iconlist =
                                         subText: `<label style="word-wrap: break-word; white-space: normal;">${err.message}</label>`
                                     }
                                 ];
-                                countOfItems = jsonData.length - 1;
-                                console.error(`[IconList - ${data.wid}] cannot parse json string! Error: ${err.message}`);
+                                console.error(`[IconList - ${data.wid}] cannot parse json string! value: '${val}' Error: ${err.message}`);
                             }
+
+                            countOfItems = jsonData.length - 1;
                         } else {
                             jsonData = [
                                 {
@@ -203,7 +215,7 @@ vis.binds.materialdesign.iconlist =
 
                         let imageElement = '';
                         if (listItemObj.listType === 'text') {
-                            imageElement = myMdwHelper.getIconElement(listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor)
+                            imageElement = myMdwHelper.getIconElement(listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor, '', 'iconlist-icon')
                         } else {
                             // Buttons
                             if (data.buttonLayout === 'round') {
@@ -211,7 +223,7 @@ vis.binds.materialdesign.iconlist =
                                 imageElement = `<div style="width: 100%; text-align: center;">
                                                 <div class="materialdesign-icon-button materialdesign-iconList-button" index="${i}" style="background: ${listItemObj.buttonBackgroundColor}; position: relative; width: ${buttonHeight}px; height: ${buttonHeight}px;">
                                                     <div class="materialdesign-button-body" style="display:flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
-                                                        ${myMdwHelper.getIconElement(listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor)}
+                                                        ${myMdwHelper.getIconElement(listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor, '', 'iconlist-icon')}
                                                     </div>
                                                 </div>
                                             </div>`
@@ -220,7 +232,7 @@ vis.binds.materialdesign.iconlist =
                                 imageElement = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
                                                 <div class="materialdesign-button materialdesign-iconList-button" index="${i}" style="background: ${listItemObj.buttonBackgroundColor}; position: relative; width: 100%; height: ${buttonHeight};">
                                                     <div class="materialdesign-button-body" style="display:flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
-                                                        ${myMdwHelper.getIconElement(listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor)}
+                                                        ${myMdwHelper.getIconElement(listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor, '', 'iconlist-icon')}
                                                     </div>
                                                 </div>
                                             </div>`
@@ -235,81 +247,89 @@ vis.binds.materialdesign.iconlist =
 
                         let element = ''
                         let val = vis.states.attr(listItemObj.objectId + '.val');
+
+                        let usePercentOfRow = myMdwHelper.getNumberFromData(listItemObj.usePercentOfRow, 0);
+                        // let cssPercentOfRow = usePercentOfRow > 0 ? `calc(${usePercentOfRow}% - (100% - 100% / var(--materialdesign-icon-list-items-per-row)) / var(--materialdesign-icon-list-items-per-row))` : 0;
+                        let cssPercentOfRow = usePercentOfRow > 0 ? `calc(${usePercentOfRow}% - (var(--materialdesign-icon-list-items-gaps) + 6px) - (var(--materialdesign-icon-list-items-per-row) - 1) * var(--materialdesign-icon-list-items-gaps))` : '';
+
+                        let minItemWidth = listItemObj.minWidth;
+
                         if (data.itemLayout === 'vertical') {
                             if (data.buttonLayout === 'full' && listItemObj.listType !== 'text') {
                                 element = `
-                                <div class="materialdesign-icon-list-item ${listLayout}" id="icon-list-item${i}" data-oid="${listItemObj.objectId}" isLocked="${listItemObj.lockEnabled}" style="${(listItemObj.background !== '') ? `background: ${listItemObj.background};` : ''} ${(listItemObj.listType !== 'text' && val === 'null') ? 'display: none' : ''}" >
-                                    <div style="flex: 1;">    
-                                        <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
-                                            <div class="materialdesign-button materialdesign-iconList-button" index="${i}" style="background: ${listItemObj.buttonBackgroundColor}; position: relative; width: 100%; height: 100%; padding: 0; border-radius: 0;">
+                                <div class="materialdesign-icon-list-item ${listLayout}" id="icon-list-item${i}" data-oid="${listItemObj.objectId}" visibilityOid="${listItemObj.visibilityOid}" isLocked="${listItemObj.lockEnabled}" style="${(listItemObj.background !== '') ? `background: ${listItemObj.background};` : ''} ${(listItemObj.listType !== 'text' && val === 'null') ? 'display: none;' : ''} ${usePercentOfRow > 0 ? `flex-basis: ${cssPercentOfRow};` : ''} ${minItemWidth ? `min-width: ${minItemWidth} !important;` : ''}">
+                                    <div style="flex: 1; height: 100%; display: flex; flex-direction: column;">    
+                                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                            <div class="materialdesign-button materialdesign-iconList-button" index="${i}" style="background: ${listItemObj.buttonBackgroundColor}; position: relative; width: 100%; height: 100%; padding: 0; ${listItemObj.statusBarColor || listItemObj.statusBarText ? 'border-bottom-left-radius: 0px; border-bottom-right-radius: 0px;' : ''}">
                                                 <div class="materialdesign-button-body" style="display:flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%;">                            
                                                 
-                                                    ${(listItemObj.text !== '') ? `<label class="materialdesign-icon-list-item-text materialdesign-icon-list-item-text-vertical" style="cursor: pointer;">${listItemObj.text}</label>` : ''}
-                                                    <div class="materialdesign-icon-list-item-layout-vertical-image-container" style="flex-grow: 1;">
-                                                        ${myMdwHelper.getIconElement(listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor)}
+                                                    ${(listItemObj.text !== '') ? `<label class="materialdesign-icon-list-item-text materialdesign-icon-list-item-text-vertical" style="${listItemObj.readOnly === false ? 'cursor: pointer;' : ''}">${listItemObj.text}</label>` : ''}
+                                                    ${imageElement ? `<div class="materialdesign-icon-list-item-layout-vertical-image-container">
+                                                        ${myMdwHelper.getIconElement(listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor, '', 'iconlist-icon')}
                                                         ${lockElement}
-                                                    </div>
-                                                    ${((listItemObj.showValueLabel === true || listItemObj.showValueLabel === 'true') && (listItemObj.listType.includes('buttonToggle') || listItemObj.listType === 'buttonState')) ? `<label class="materialdesign-icon-list-item-value materialdesign-icon-list-item-text-vertical" style="cursor: pointer;">${(val !== 'null') ? `${val}${listItemObj.valueAppendix}` : ''}</label>` : ''}
-                                                    ${(listItemObj.subText !== '') ? `<label class="materialdesign-icon-list-item-subText materialdesign-icon-list-item-text-vertical" style="cursor: pointer;">${listItemObj.subText}</label>` : ''}                                                
+                                                    </div>` : ''}
+                                                    ${((listItemObj.showValueLabel === true || listItemObj.showValueLabel === 'true') && (listItemObj.listType.includes('buttonToggle') || listItemObj.listType === 'buttonState')) ? `<label class="materialdesign-icon-list-item-value materialdesign-icon-list-item-text-vertical" style="${listItemObj.readOnly === false ? 'cursor: pointer;' : ''}">${(val !== 'null') ? `${val}${listItemObj.valueAppendix}` : ''}</label>` : ''}
+                                                    ${(listItemObj.subText !== '') ? `<label class="materialdesign-icon-list-item-subText materialdesign-icon-list-item-text-vertical" style="${listItemObj.readOnly === false ? 'cursor: pointer;' : ''}">${listItemObj.subText}</label>` : ''}                                                
                                                 </div>
                                             </div>
                                         </div>
-                                        ${listItemObj.statusBarColor || listItemObj.statusBarText ? `<div class="${(data.listLayout.includes('card')) ? 'materialdesign-icon-list-item-layout-vertical-status-line-card' : 'materialdesign-icon-list-item-layout-vertical-status-line'}" style="background: ${listItemObj.statusBarColor};">${listItemObj.statusBarText}</div>` : ''}
+                                        ${`<div class="${(data.listLayout.includes('card')) ? 'materialdesign-icon-list-item-layout-vertical-status-line-card' : 'materialdesign-icon-list-item-layout-vertical-status-line'}" style="background: ${listItemObj.statusBarColor}; visibility: ${listItemObj.statusBarColor || listItemObj.statusBarText ? 'visible' : 'collapse'}; ${listItemObj.statusBarColor || listItemObj.statusBarText ? 'min-height: 4px;' : ''}">${listItemObj.statusBarText ? listItemObj.statusBarText : ""}</div>`}
                                     </div>
                                 </div>`;
                             } else {
                                 element = `
-                                <div class="materialdesign-icon-list-item ${listLayout}" id="icon-list-item${i}" data-oid="${listItemObj.objectId}" isLocked="${listItemObj.lockEnabled}" style="${(listItemObj.background !== '') ? `background: ${listItemObj.background};` : ''} ${(listItemObj.listType !== 'text' && val === 'null') ? 'display: none' : ''}" >
+                                <div class="materialdesign-icon-list-item ${listLayout}" id="icon-list-item${i}" data-oid="${listItemObj.objectId}" visibilityOid="${listItemObj.visibilityOid}" isLocked="${listItemObj.lockEnabled}" style="${(listItemObj.background !== '') ? `background: ${listItemObj.background};` : ''} ${(listItemObj.listType !== 'text' && val === 'null') ? 'display: none' : ''} ${usePercentOfRow > 0 ? `flex-basis: ${cssPercentOfRow};` : ''} ${minItemWidth ? `min-width: ${minItemWidth} !important;` : ''}">
                                     ${(listItemObj.text !== '') ? `<label class="materialdesign-icon-list-item-text materialdesign-icon-list-item-text-vertical">${listItemObj.text}</label>` : ''}
-                                    <div class="materialdesign-icon-list-item-layout-vertical-image-container">
+                                    ${imageElement ? `<div class="materialdesign-icon-list-item-layout-vertical-image-container">
                                         ${imageElement}
                                         ${lockElement}
-                                    </div>
+                                    </div>` : ''}
                                     ${((listItemObj.showValueLabel === true || listItemObj.showValueLabel === 'true') && (listItemObj.listType.includes('buttonToggle') || listItemObj.listType === 'buttonState')) ? `<label class="materialdesign-icon-list-item-value materialdesign-icon-list-item-text-vertical">${(val !== 'null') ? `${val}${listItemObj.valueAppendix}` : ''}</label>` : ''}
                                     ${(listItemObj.subText !== '') ? `<label class="materialdesign-icon-list-item-subText materialdesign-icon-list-item-text-vertical">${listItemObj.subText}</label>` : ''}
-                                    ${listItemObj.statusBarColor || listItemObj.statusBarText ? `<div class="${(data.listLayout.includes('card')) ? 'materialdesign-icon-list-item-layout-vertical-status-line-card' : 'materialdesign-icon-list-item-layout-vertical-status-line'}" style="background: ${listItemObj.statusBarColor};">${listItemObj.statusBarText}</div>` : ''}
+                                    ${`<div class="${(data.listLayout.includes('card')) ? 'materialdesign-icon-list-item-layout-vertical-status-line-card' : 'materialdesign-icon-list-item-layout-vertical-status-line'}" style="background: ${listItemObj.statusBarColor}; visibility: ${listItemObj.statusBarColor || listItemObj.statusBarText ? 'visible' : 'collapse'}; ${listItemObj.statusBarColor || listItemObj.statusBarText ? 'min-height: 4px;' : ''}">${listItemObj.statusBarText ? listItemObj.statusBarText : ""}</div>`}
                                 </div>`;
                             }
-
                         } else {
                             if (data.buttonLayout === 'full' && listItemObj.listType !== 'text') {
                                 element = `
-                                <div class="materialdesign-icon-list-item ${listLayout}" id="icon-list-item${i}" data-oid="${listItemObj.objectId}" isLocked="${listItemObj.lockEnabled}" style="${(listItemObj.background !== '') ? `background: ${listItemObj.background};` : ''} ${(listItemObj.listType !== 'text' && val === 'null') ? 'display: none' : ''}" >
-                                    <div style="flex: 1;">
-                                        <div style="width: 100%; display: flex; align-items: center; justify-content: center;">                                
-                                            <div class="materialdesign-button materialdesign-iconList-button" index="${i}" style="background: ${listItemObj.buttonBackgroundColor}; position: relative; width: 100%; height: 100%; padding: 0; border-radius: 0;">
+                                <div class="materialdesign-icon-list-item ${listLayout}" id="icon-list-item${i}" data-oid="${listItemObj.objectId}" visibilityOid="${listItemObj.visibilityOid}" isLocked="${listItemObj.lockEnabled}" style="${(listItemObj.background !== '') ? `background: ${listItemObj.background};` : ''} ${(listItemObj.listType !== 'text' && val === 'null') ? 'display: none' : ''} ${usePercentOfRow > 0 ? `flex-basis: ${cssPercentOfRow};` : ''} ${minItemWidth ? `min-width: ${minItemWidth} !important;` : ''}">
+                                    <div style="flex: 1; height: 100%; display: flex; flex-direction: column;">
+                                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">                                
+                                            <div class="materialdesign-button materialdesign-iconList-button" index="${i}" style="background: ${listItemObj.buttonBackgroundColor}; position: relative; width: 100%; height: 100%; padding: 0; ${listItemObj.statusBarColor || listItemObj.statusBarText ? 'border-bottom-left-radius: 0px; border-bottom-right-radius: 0px;' : ''}">
                                                 <div class="materialdesign-button-body" style="display:flex; justify-content: center; align-items: center; width: 100%; height: 100%;">                            
 
-                                                    <div class="materialdesign-icon-list-item-layout-horizontal-image-container">
-                                                        ${myMdwHelper.getIconElement(listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor)}
+                                                    ${imageElement ? `<div class="materialdesign-icon-list-item-layout-horizontal-image-container">
+                                                        ${myMdwHelper.getIconElement(listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor, '', 'iconlist-icon')}
                                                         ${lockElement}
-                                                    </div>
-                                                    <div class="materialdesign-icon-list-item-layout-horizontal-text-container" style="cursor: pointer;">
-                                                        ${(listItemObj.text !== '') ? `<label class="materialdesign-icon-list-item-text" style="cursor: pointer;">${listItemObj.text}</label>` : ''}
-                                                        ${(listItemObj.subText !== '') ? `<label class="materialdesign-icon-list-item-subText" style="cursor: pointer;">${listItemObj.subText}</label>` : ''}
-                                                        ${((listItemObj.showValueLabel === true || listItemObj.showValueLabel === 'true') && (listItemObj.listType.includes('buttonToggle') || listItemObj.listType === 'buttonState')) ? `<label class="materialdesign-icon-list-item-value" style="cursor: pointer;">${(val !== 'null') ? `${val}${listItemObj.valueAppendix}` : ''}</label>` : ''}
+                                                    </div>` : ''}
+                                                    <div class="materialdesign-icon-list-item-layout-horizontal-text-container" style="${listItemObj.readOnly === false ? 'cursor: pointer;' : ''}">
+                                                        ${(listItemObj.text !== '') ? `<label class="materialdesign-icon-list-item-text" style="${listItemObj.readOnly === false ? 'cursor: pointer;' : ''}">${listItemObj.text}</label>` : ''}
+                                                        ${(listItemObj.subText !== '') ? `<label class="materialdesign-icon-list-item-subText" style="${listItemObj.readOnly === false ? 'cursor: pointer;' : ''}">${listItemObj.subText}</label>` : ''}
+                                                        ${((listItemObj.showValueLabel === true || listItemObj.showValueLabel === 'true') && (listItemObj.listType.includes('buttonToggle') || listItemObj.listType === 'buttonState')) ? `<label class="materialdesign-icon-list-item-value" style="${listItemObj.readOnly === false ? 'cursor: pointer;' : ''}">${(val !== 'null') ? `${val}${listItemObj.valueAppendix}` : ''}</label>` : ''}
                                                     </div>
                                                 </div>                                        
                                             </div>                                    
                                         </div>
-                                        ${listItemObj.statusBarColor || listItemObj.statusBarText ? `<div class="${(data.listLayout.includes('card')) ? 'materialdesign-icon-list-item-layout-horizontal-status-line-card' : 'materialdesign-icon-list-item-layout-horizontal-status-line'}" style="background: ${listItemObj.statusBarColor};">${listItemObj.statusBarText}</div>` : ''}
+                                        ${`<div class="${(data.listLayout.includes('card')) ? 'materialdesign-icon-list-item-layout-horizontal-status-line-card' : 'materialdesign-icon-list-item-layout-horizontal-status-line'}" style="background: ${listItemObj.statusBarColor}; visibility: ${listItemObj.statusBarColor || listItemObj.statusBarText ? 'visible' : 'collapse'}; ${listItemObj.statusBarColor || listItemObj.statusBarText ? 'min-height: 4px;' : ''}">${listItemObj.statusBarText ? listItemObj.statusBarText : ""}</div>`}
                                     </div>
                                 </div>`;
                             } else {
                                 element = `
-                                <div class="materialdesign-icon-list-item ${listLayout}" id="icon-list-item${i}" data-oid="${listItemObj.objectId}" isLocked="${listItemObj.lockEnabled}" style="${(listItemObj.background !== '') ? `background: ${listItemObj.background};` : ''} ${(listItemObj.listType !== 'text' && val === 'null') ? 'display: none' : ''}" >
-                                    <div style="display: flex; flex: 1;">
-                                        <div class="materialdesign-icon-list-item-layout-horizontal-image-container">
+                                <div class="materialdesign-icon-list-item ${listLayout}" id="icon-list-item${i}" data-oid="${listItemObj.objectId}" visibilityOid="${listItemObj.visibilityOid}" isLocked="${listItemObj.lockEnabled}" style="${(listItemObj.background !== '') ? `background: ${listItemObj.background};` : ''} ${(listItemObj.listType !== 'text' && val === 'null') ? 'display: none' : ''} ${usePercentOfRow > 0 ? `flex-basis: ${cssPercentOfRow};` : ''} ${minItemWidth ? `min-width: ${minItemWidth} !important;` : ''}">
+                                <div style="flex: 1; height: 100%; display: flex; flex-direction: column;">    
+                                    <div style="flex: 1; display: flex;">
+                                        ${imageElement ? `<div class="materialdesign-icon-list-item-layout-horizontal-image-container">
                                             ${imageElement}
                                             ${lockElement}
-                                        </div>
+                                        </div>` : ''}
                                         <div class="materialdesign-icon-list-item-layout-horizontal-text-container">
                                             ${(listItemObj.text !== '') ? `<label class="materialdesign-icon-list-item-text">${listItemObj.text}</label>` : ''}
                                             ${(listItemObj.subText !== '') ? `<label class="materialdesign-icon-list-item-subText">${listItemObj.subText}</label>` : ''}
                                             ${((listItemObj.showValueLabel === true || listItemObj.showValueLabel === 'true') && (listItemObj.listType.includes('buttonToggle') || listItemObj.listType === 'buttonState')) ? `<label class="materialdesign-icon-list-item-value">${(val !== 'null') ? `${val}${listItemObj.valueAppendix}` : ''}</label>` : ''}
-                                        </div>
+                                        </div>                                        
                                     </div>
-                                    ${listItemObj.statusBarColor || listItemObj.statusBarText ? `<div class="${(data.listLayout.includes('card')) ? 'materialdesign-icon-list-item-layout-horizontal-status-line-card' : 'materialdesign-icon-list-item-layout-horizontal-status-line'}" style="background: ${listItemObj.statusBarColor};">${listItemObj.statusBarText}</div>` : ''}
+                                    ${`<div class="${(data.listLayout.includes('card')) ? 'materialdesign-icon-list-item-layout-horizontal-status-line-card' : 'materialdesign-icon-list-item-layout-horizontal-status-line'}" style="background: ${listItemObj.statusBarColor}; visibility: ${listItemObj.statusBarColor || listItemObj.statusBarText ? 'visible' : 'collapse'}; ${listItemObj.statusBarColor || listItemObj.statusBarText ? 'min-height: 4px;' : ''}">${listItemObj.statusBarText ? listItemObj.statusBarText : ""}</div>`}
+                                </div>
                                 </div>`;
                             }
                         }
@@ -329,6 +349,20 @@ vis.binds.materialdesign.iconlist =
                 function appendContent(replace = false, scrollTop = 0, scrollLeft = 0) {
                     if (!replace) {
                         let widgetElement = itemList.join("");
+                        let headerHeight = myMdwHelper.getNumberFromData(data.header_height, 60);
+
+                        let iconListHeader = myMdwHelper.getValueFromData(data.headers, undefined) ?
+                            `<div class="materialdesign-widget materialdesign-html-card" style="height: ${headerHeight}px; position: relative; overflow: hidden; margin-bottom: -5px;">
+                                <div class="materialdesign-html-card-container mdc-card" 
+                                    style="margin: 8px 3px 3px 3px; width: calc(100% - 6px); height: ${headerHeight + 5}px; display: flex; flex-direction: row; align-items: center;
+                                            padding: ${myMdwHelper.getNumberFromData(data.header_padding_top, 0)}px ${myMdwHelper.getNumberFromData(data.header_padding_right, 0)}px ${myMdwHelper.getNumberFromData(data.header_padding_bottom, 0)}px ${myMdwHelper.getNumberFromData(data.header_padding_left, 0)}px;
+                                            text-align: ${myMdwHelper.getValueFromData(data.alignment, "flex-start").replace('flex-', '')};
+                                            background: transparent;">
+                                            ${myMdwHelper.getIconElement(data.headerImage, 'auto', myMdwHelper.getValueFromData(data.headerImageHeight, '24px', '', 'px'), myMdwHelper.getValueFromData(data.headerImageColor, ''))}
+                                            <div class="materialdesign-icon-list-header">${data.headers}</div>
+                                </div>
+                            </div>`
+                            : undefined;
 
                         if (bindingTokenList.length > 0) {
                             for (var b = 0; b <= bindingTokenList.length - 1; b++) {
@@ -338,6 +372,7 @@ vis.binds.materialdesign.iconlist =
 
                         if (!myMdwHelper.getBooleanFromData(data.cardUse, false)) {
                             $this.append(`
+                            ${iconListHeader ? iconListHeader : ''}
                             <div class="${containerClass}" ${(myMdwHelper.getBooleanFromData(data.wrapItems, true)) ? 'style="height: auto; flex-wrap: wrap;"' : ''}>
                                 ${widgetElement}
                             </div>
@@ -350,7 +385,9 @@ vis.binds.materialdesign.iconlist =
                             }
 
                             // $this.css('padding', '2px');
-                            $this.append(`<div class="materialdesign-html-card mdc-card" style="margin-top: 3px; margin-left: 3px; margin-bottom: 3px; width: calc(100% - 6px); height: calc(100% - 6px);">
+                            $this.append(`
+                                    ${iconListHeader ? iconListHeader : ''}
+                                    <div class="materialdesign-html-card mdc-card" style="margin-top: 3px; margin-left: 3px; margin-bottom: 3px; width: calc(100% - 6px); height: calc(100% - 6px);">
                                         <div class="materialdesign-html-card card-title-section" style="${showTitleSection}">
                                             <div class="materialdesign-html-card card-title ${titleFontSize.class}" style="${titleFontSize.style}">${data.title}</div>
                                         </div>
@@ -452,79 +489,100 @@ vis.binds.materialdesign.iconlist =
                             let listItemObj = getListItemObj(itemIndex, data, jsonData);
 
                             // set ripple effect to icon buttons
-                            if (data.buttonLayout === 'round') {
-                                new mdc.iconButton.MDCIconButtonToggle(iconButtons.get(i));
+                            if (listItemObj.readOnly === false) {
+                                if (data.buttonLayout === 'round') {
+                                    new mdc.iconButton.MDCIconButtonToggle(iconButtons.get(i));
+                                } else {
+                                    new mdc.ripple.MDCRipple(iconButtons.get(i));
+                                }
                             } else {
-                                new mdc.ripple.MDCRipple(iconButtons.get(i));
+                                $(iconButtons[i]).css('cursor', 'default');
+                            }
+
+                            if (listItemObj.visibilityOid) {
+                                vis.states.bind(listItemObj.visibilityOid + '.val', function (e, newVal, oldVal) {
+                                    let itemWithVisibilityOid = $this.find('.materialdesign-icon-list-item[visibilityOid="' + listItemObj.visibilityOid + '"]');
+
+                                    itemWithVisibilityOid.each(function (d) {
+                                        let $item = $(this);
+                                        let itemIndex = $item.attr('id').replace('icon-list-item', '');
+                                        setViewVisibilityByCondition(itemIndex, $item);
+                                    });
+                                });
                             }
 
                             if (iconButtons && iconButtons.get(i)) {
-                                iconButtons.get(i).style.setProperty("--materialdesign-color-icon-button-hover", myMdwHelper.getValueFromData(data.buttonColorPress, ''));
+                                if (listItemObj.readOnly === false) {
+                                    iconButtons.get(i).style.setProperty("--materialdesign-color-icon-button-hover", myMdwHelper.getValueFromData(data.buttonColorPress, ''));
 
-                                iconButtons.eq(i).on('click', function () {
-                                    // icon button click event
-                                    let index = $(this).attr('index');
-                                    let $item = $this.find(`#icon-list-item${index}`);
+                                    iconButtons.eq(i).on('click', function () {
+                                        // icon button click event
+                                        let index = $(this).attr('index');
+                                        let $item = $this.find(`#icon-list-item${index}`);
 
-                                    listItemObj = getListItemObj(index, data, jsonData);
+                                        listItemObj = getListItemObj(index, data, jsonData);
 
-                                    if (listItemObj.listType !== 'text') {
-                                        vis.binds.materialdesign.helper.vibrate(data.vibrateOnMobilDevices);
-                                    }
+                                        if (listItemObj.listType === 'buttonToggle') {
+                                            if ($item.attr('isLocked') === 'false' || $item.attr('isLocked') === undefined) {
+                                                let selectedValue = vis.states.attr(listItemObj.objectId + '.val');
 
-                                    if (listItemObj.listType === 'buttonToggle') {
-                                        if ($item.attr('isLocked') === 'false' || $item.attr('isLocked') === undefined) {
-                                            let selectedValue = vis.states.attr(listItemObj.objectId + '.val');
+                                                myMdwHelper.setValue(listItemObj.objectId, !selectedValue);
 
-                                            myMdwHelper.setValue(listItemObj.objectId, !selectedValue);
-
-                                            setItemLayout(index, !selectedValue, listItemObj);
-                                        } else {
-                                            unlockButton($item);
-                                        }
-                                    } else if (listItemObj.listType === 'buttonState') {
-                                        if ($item.attr('isLocked') === 'false' || $item.attr('isLocked') === undefined) {
-                                            let valueToSet = listItemObj.buttonStateValue;
-                                            myMdwHelper.setValue(listItemObj.objectId, valueToSet);
-
-                                            setItemLayout(index, vis.states.attr(listItemObj.objectId + '.val'), listItemObj);
-                                        } else {
-                                            unlockButton($item);
-                                        }
-                                    } else if (listItemObj.listType === 'buttonToggleValueTrue') {
-                                        if ($item.attr('isLocked') === 'false' || $item.attr('isLocked') === undefined) {
-                                            let val = vis.states.attr(listItemObj.objectId + '.val');
-
-                                            if (val === listItemObj.buttonToggleValueTrue || parseFloat(val) === parseFloat(listItemObj.buttonToggleValueTrue)) {
-                                                myMdwHelper.setValue(listItemObj.objectId, listItemObj.buttonToggleValueFalse);
+                                                setItemLayout(index, !selectedValue, listItemObj);
                                             } else {
-                                                myMdwHelper.setValue(listItemObj.objectId, listItemObj.buttonToggleValueTrue);
+                                                unlockButton($item);
                                             }
+                                        } else if (listItemObj.listType === 'buttonState') {
+                                            if ($item.attr('isLocked') === 'false' || $item.attr('isLocked') === undefined) {
+                                                let valueToSet = listItemObj.buttonStateValue;
+                                                myMdwHelper.setValue(listItemObj.objectId, valueToSet);
 
-                                            setItemLayout(index, vis.states.attr(listItemObj.objectId + '.val'), listItemObj);
-                                        } else {
-                                            unlockButton($item);
-                                        }
-                                    } else if (listItemObj.listType === 'buttonToggleValueFalse') {
-                                        if ($item.attr('isLocked') === 'false' || $item.attr('isLocked') === undefined) {
-                                            let val = vis.states.attr(listItemObj.objectId + '.val');
-
-                                            if (val === listItemObj.buttonToggleValueFalse || parseFloat(val) === parseFloat(listItemObj.buttonToggleValueFalse)) {
-                                                myMdwHelper.setValue(listItemObj.objectId, listItemObj.buttonToggleValueTrue);
+                                                setItemLayout(index, vis.states.attr(listItemObj.objectId + '.val'), listItemObj);
                                             } else {
-                                                myMdwHelper.setValue(listItemObj.objectId, listItemObj.buttonToggleValueFalse);
+                                                unlockButton($item);
                                             }
+                                        } else if (listItemObj.listType === 'buttonToggleValueTrue') {
+                                            if ($item.attr('isLocked') === 'false' || $item.attr('isLocked') === undefined) {
+                                                let val = vis.states.attr(listItemObj.objectId + '.val');
 
-                                            setItemLayout(index, vis.states.attr(listItemObj.objectId + '.val'), listItemObj);
-                                        } else {
-                                            unlockButton($item);
+                                                if (val === listItemObj.buttonToggleValueTrue || parseFloat(val) === parseFloat(listItemObj.buttonToggleValueTrue)) {
+                                                    myMdwHelper.setValue(listItemObj.objectId, listItemObj.buttonToggleValueFalse);
+                                                } else {
+                                                    myMdwHelper.setValue(listItemObj.objectId, listItemObj.buttonToggleValueTrue);
+                                                }
+
+                                                setItemLayout(index, vis.states.attr(listItemObj.objectId + '.val'), listItemObj);
+                                            } else {
+                                                unlockButton($item);
+                                            }
+                                        } else if (listItemObj.listType === 'buttonToggleValueFalse') {
+                                            if ($item.attr('isLocked') === 'false' || $item.attr('isLocked') === undefined) {
+                                                let val = vis.states.attr(listItemObj.objectId + '.val');
+
+                                                if (val === listItemObj.buttonToggleValueFalse || parseFloat(val) === parseFloat(listItemObj.buttonToggleValueFalse)) {
+                                                    myMdwHelper.setValue(listItemObj.objectId, listItemObj.buttonToggleValueTrue);
+                                                } else {
+                                                    myMdwHelper.setValue(listItemObj.objectId, listItemObj.buttonToggleValueFalse);
+                                                }
+
+                                                setItemLayout(index, vis.states.attr(listItemObj.objectId + '.val'), listItemObj);
+                                            } else {
+                                                unlockButton($item);
+                                            }
+                                        } else if (listItemObj.listType === 'buttonNav') {
+                                            vis.changeView(listItemObj.buttonNavView);
+                                        } else if (listItemObj.listType === 'buttonLink') {
+                                            window.open(listItemObj.buttonLink);
                                         }
-                                    } else if (listItemObj.listType === 'buttonNav') {
-                                        vis.changeView(listItemObj.buttonNavView);
-                                    } else if (listItemObj.listType === 'buttonLink') {
-                                        window.open(listItemObj.buttonLink);
-                                    }
-                                });
+                                    }).on('tapstart', function (e) {
+                                        if (listItemObj.listType !== 'text') {
+                                            myMdwHelper.hapticFeedback(data);
+                                        }
+                                    });
+                                } else {
+                                    iconButtons.get(i).style.setProperty("--materialdesign-color-icon-button-hover", 'transparent');
+                                    setItemLayout(itemIndex, vis.states.attr(listItemObj.objectId + '.val'), listItemObj);
+                                }
                             }
 
                             if (listItemObj.listType.includes('buttonToggle') || listItemObj.listType === 'buttonState') {
@@ -549,7 +607,7 @@ vis.binds.materialdesign.iconlist =
 
                                     // add to eventBind obj to prevent event fires multiples times if objectId is same on multiple objs
                                     eventBind[valId] = true;
-                                    console.log(`[IconList - ${data.wid}] event bind for '${valId}'`);
+                                    if (data.debug) console.log(`[IconList - ${data.wid}] event bind for '${valId}'`);
                                 }
                             }
                         }
@@ -569,37 +627,116 @@ vis.binds.materialdesign.iconlist =
                     let iconButtons = $this.find('.materialdesign-iconList-button');
 
                     if (iconButtons && iconButtons.get(index)) {
-                        iconButtons.get(index).style.setProperty("--materialdesign-color-icon-button-hover", myMdwHelper.getValueFromData(data.buttonColorPress, ''));
+                        if (listItemObj.readOnly === false) {
+                            iconButtons.get(index).style.setProperty("--materialdesign-color-icon-button-hover", myMdwHelper.getValueFromData(data.buttonColorPress, ''));
+                        } else {
+                            iconButtons.get(index).style.setProperty("--materialdesign-color-icon-button-hover", 'transparent');
+                        }
                     }
 
-                    if (listItemObj.listType === 'buttonState') {
-                        // buttonState -> show as active if value is state value
-
-                        if (val === listItemObj.buttonStateValue || parseFloat(val) === parseFloat(listItemObj.buttonStateValue)) {
-                            val = true;
-                        } else {
-                            val = false;
-                        }
-                    } else if (listItemObj.listType === 'buttonToggleValueTrue') {
-                        if (val === listItemObj.buttonToggleValueTrue || parseFloat(val) === parseFloat(listItemObj.buttonToggleValueTrue)) {
-                            val = true;
-                        } else {
-                            val = false;
-                        }
-                    } else if (listItemObj.listType === 'buttonToggleValueFalse') {
-                        if (val === listItemObj.buttonToggleValueFalse || parseFloat(val) === parseFloat(listItemObj.buttonToggleValueFalse)) {
-                            val = false;
-                        } else {
-                            val = true;
+                    if (val !== undefined && val !== 'undefined' && val !== null && val !== 'null' && val !== '') {
+                        if (listItemObj.listType === 'buttonState') {
+                            // buttonState -> show as active if value is state value
+                            if ((val || val === 0) && val.toString() === listItemObj.buttonStateValue.toString()) {
+                                val = true;
+                            } else {
+                                val = false;
+                            }
+                        } else if (listItemObj.listType === 'buttonToggleValueTrue') {
+                            if ((val || val === 0) && val.toString() === listItemObj.buttonToggleValueTrue.toString()) {
+                                val = true;
+                            } else {
+                                val = false;
+                            }
+                        } else if (listItemObj.listType === 'buttonToggleValueFalse') {
+                            if ((val || val === 0) && val.toString() === listItemObj.buttonToggleValueFalse.toString()) {
+                                val = false;
+                            } else {
+                                val = true;
+                            }
                         }
                     }
 
                     if (val === true || val === 'true') {
                         $item.find('.materialdesign-iconList-button').css('background', listItemObj.buttonBackgroundActiveColor);
-                        myMdwHelper.changeIconElement($item, listItemObj.imageActive, 'auto', iconHeight + 'px', listItemObj.imageActiveColor);
+                        myMdwHelper.changeIconElement($item, listItemObj.imageActive, 'auto', iconHeight + 'px', listItemObj.imageActiveColor, '', 'iconlist-icon');
+
+                        $item.find('.materialdesign-icon-list-item-text').css('color', myMdwHelper.getValueFromData(data.labelFontColorSelected, myMdwHelper.getValueFromData(data.labelFontColor, '')));
+
+                        if (listItemObj.statusBarColorActive || listItemObj.statusBarTextActive) {
+
+                            $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line-card').css('visibility', 'visible').css('background', listItemObj.statusBarColorActive)
+                                .html(listItemObj.statusBarTextActive ? listItemObj.statusBarTextActive : "");
+
+                            $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line').css('visibility', 'visible').css('background', listItemObj.statusBarColorActive)
+                                .html(listItemObj.statusBarTextActive ? listItemObj.statusBarTextActive : "");
+
+                            $item.find('.materialdesign-icon-list-item-layout-vertical-status-line-card').css('visibility', 'visible').css('background', listItemObj.statusBarColorActive)
+                                .html(listItemObj.statusBarTextActive ? listItemObj.statusBarTextActive : "");
+
+                            $item.find('.materialdesign-icon-list-item-layout-vertical-status-line').css('visibility', 'visible').css('background', listItemObj.statusBarColorActive)
+                                .html(listItemObj.statusBarTextActive ? listItemObj.statusBarTextActive : "");
+
+                            if (listItemObj.statusBarColorActive) {
+                                $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line-card').css('min-height', "4px");
+                                $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line').css('min-height', "4px");
+
+                                $item.find('.materialdesign-icon-list-item-layout-vertical-status-line-card').css('min-height', "4px");
+                                $item.find('.materialdesign-icon-list-item-layout-vertical-status-line').css('min-height', "4px");
+                            } else {
+                                $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line-card').css('min-height', "0px");
+                                $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line').css('min-height', "0px");
+
+                                $item.find('.materialdesign-icon-list-item-layout-vertical-status-line-card').css('min-height', "0px");
+                                $item.find('.materialdesign-icon-list-item-layout-vertical-status-line').css('min-height', "0px");
+                            }
+                        } else {
+                            $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line-card').css('visibility', 'collapse').css('min-height', "0px");
+                            $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line').css('visibility', 'collapse').css('min-height', "0px");
+
+                            $item.find('.materialdesign-icon-list-item-layout-vertical-status-line-card').css('visibility', 'collapse').css('min-height', "0px");
+                            $item.find('.materialdesign-icon-list-item-layout-vertical-status-line').css('visibility', 'collapse').css('min-height', "0px");
+                        }
+
                     } else {
                         $item.find('.materialdesign-iconList-button').css('background', listItemObj.buttonBackgroundColor);
-                        myMdwHelper.changeIconElement($item, listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor);
+                        myMdwHelper.changeIconElement($item, listItemObj.image, 'auto', iconHeight + 'px', listItemObj.imageColor, '', 'iconlist-icon');
+
+                        $item.find('.materialdesign-icon-list-item-text').css('color', myMdwHelper.getValueFromData(data.labelFontColor, ''));
+
+                        if (listItemObj.statusBarColor || listItemObj.statusBarText) {
+                            $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line-card').css('visibility', 'visible').css('background', listItemObj.statusBarColor)
+                                .html(listItemObj.statusBarText ? listItemObj.statusBarText : "");
+
+                            $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line').css('visibility', 'visible').css('background', listItemObj.statusBarColor)
+                                .html(listItemObj.statusBarText ? listItemObj.statusBarText : "");
+
+                            $item.find('.materialdesign-icon-list-item-layout-vertical-status-line-card').css('visibility', 'visible').css('background', listItemObj.statusBarColor)
+                                .html(listItemObj.statusBarText ? listItemObj.statusBarText : "");
+
+                            $item.find('.materialdesign-icon-list-item-layout-vertical-status-line').css('visibility', 'visible').css('background', listItemObj.statusBarColor)
+                                .html(listItemObj.statusBarText ? listItemObj.statusBarText : "");
+
+                            if (listItemObj.statusBarColor) {
+                                $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line-card').css('min-height', "4px");
+                                $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line').css('min-height', "4px");
+
+                                $item.find('.materialdesign-icon-list-item-layout-vertical-status-line-card').css('min-height', "4px");
+                                $item.find('.materialdesign-icon-list-item-layout-vertical-status-line').css('min-height', "4px");
+                            } else {
+                                $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line-card').css('min-height', "0px");
+                                $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line').css('min-height', "0px");
+
+                                $item.find('.materialdesign-icon-list-item-layout-vertical-status-line-card').css('min-height', "0px");
+                                $item.find('.materialdesign-icon-list-item-layout-vertical-status-line').css('min-height', "0px");
+                            }
+                        } else {
+                            $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line-card').css('visibility', 'collapse').css('min-height', "0px");
+                            $item.find('.materialdesign-icon-list-item-layout-horizontal-status-line').css('visibility', 'collapse').css('min-height', "0px");
+
+                            $item.find('.materialdesign-icon-list-item-layout-vertical-status-line-card').css('visibility', 'collapse').css('min-height', "0px");
+                            $item.find('.materialdesign-icon-list-item-layout-vertical-status-line').css('visibility', 'collapse').css('min-height', "0px");
+                        }
                     }
 
                     if ($item.attr('isLocked') === 'true') {
@@ -610,8 +747,7 @@ vis.binds.materialdesign.iconlist =
                         }
                     }
 
-                    $item.show();
-                    $item.css('display', 'flex');
+                    setViewVisibilityByCondition(index, $item);
                 }
 
                 function unlockButton($item) {
@@ -638,17 +774,35 @@ vis.binds.materialdesign.iconlist =
                     }, myMdwHelper.getNumberFromData(data.autoLockAfter, 10) * 1000);
                 }
 
+                function setViewVisibilityByCondition(itemIndex, $item) {
+                    let itemObj = getListItemObj(itemIndex, data, jsonData);
+
+                    let visibility = myMdwHelper.getVisibility(vis.states.attr(itemObj.visibilityOid + '.val'), itemObj.visibilityOid, itemObj.visibilityCondition, itemObj.visibilityConditionValue);
+
+                    if (data.debug) console.log(`[setViewVisibilityByCondition]: change item '${itemIndex}' visibility to ${!visibility}`);
+
+                    if (visibility) {
+                        $item.hide();
+                    } else {
+                        $item.show();
+                        $item.css('display', 'flex');
+                    }
+                }
+
                 function getListItemObj(i, data, jsonData) {
                     if (data.listItemDataMethod === 'inputPerEditor') {
                         // Data from Editor
                         return {
                             listType: myMdwHelper.getValueFromData(data.attr('listType' + i), 'text'),
                             objectId: data.attr('oid' + i),
+                            minWidth: myMdwHelper.getValueFromData(data.attr('minWidth' + i), undefined),
+                            usePercentOfRow: data.attr('usePercentOfRow' + i),
                             buttonStateValue: data.attr('listTypeButtonStateValue' + i),
                             buttonNavView: data.attr('listTypeButtonNav' + i),
                             buttonLink: data.attr('listTypeButtonLink' + i),
                             buttonToggleValueTrue: data.attr('typeButtonToggleValueTrue' + i),
                             buttonToggleValueFalse: data.attr('typeButtonToggleValueFalse' + i),
+                            readOnly: myMdwHelper.getBooleanFromData(data.attr('readOnly' + i), false),
                             showValueLabel: myMdwHelper.getBooleanFromData(data.attr('showValueLabel' + i), true),
                             valueAppendix: myMdwHelper.getValueFromData(data.attr('valueAppendix' + i), ""),
                             background: myMdwHelper.getValueFromData(data.attr('itemBackgroundColor' + i), myMdwHelper.getValueFromData(data.itemBackgroundColor, '')),
@@ -661,8 +815,13 @@ vis.binds.materialdesign.iconlist =
                             buttonBackgroundColor: myMdwHelper.getValueFromData(data.attr('buttonBgColor' + i), ''),
                             buttonBackgroundActiveColor: myMdwHelper.getValueFromData(data.attr('buttonBgColorActive' + i), myMdwHelper.getValueFromData(data.attr('buttonBgColor' + i), '')),
                             statusBarColor: myMdwHelper.getValueFromData(data.attr('statusBarColor' + i), undefined),
-                            statusBarText: myMdwHelper.getValueFromData(data.attr('statusBarText' + i), ''),
-                            lockEnabled: myMdwHelper.getBooleanFromData(data.attr('lockEnabled' + i), false)
+                            statusBarColorActive: myMdwHelper.getValueFromData(data.attr('statusBarColorActive' + i), myMdwHelper.getValueFromData(data.attr('statusBarColor' + i), undefined)),
+                            statusBarText: myMdwHelper.getValueFromData(data.attr('statusBarText' + i), undefined),
+                            statusBarTextActive: myMdwHelper.getValueFromData(data.attr('statusBarTextActive' + i), myMdwHelper.getValueFromData(data.attr('statusBarText' + i), undefined)),
+                            lockEnabled: myMdwHelper.getBooleanFromData(data.attr('lockEnabled' + i), false),
+                            visibilityOid: myMdwHelper.getValueFromData(data.attr('visibilityOid' + i), ''),
+                            visibilityCondition: myMdwHelper.getValueFromData(data.attr('visibilityCondition' + i), ''),
+                            visibilityConditionValue: myMdwHelper.getValueFromData(data.attr('visibilityConditionValue' + i), ''),
                         };
                     } else {
                         // Data from json
@@ -670,11 +829,14 @@ vis.binds.materialdesign.iconlist =
                             return {
                                 listType: myMdwHelper.getValueFromData(jsonData[i].listType, 'text'),
                                 objectId: jsonData[i].objectId,
+                                minWidth: jsonData[i].minWidth,
+                                usePercentOfRow: jsonData[i].usePercentOfRow,
                                 buttonStateValue: jsonData[i].buttonStateValue,
                                 buttonNavView: jsonData[i].buttonNavView,
                                 buttonLink: jsonData[i].buttonLink,
                                 buttonToggleValueTrue: jsonData[i].buttonToggleValueTrue,
                                 buttonToggleValueFalse: jsonData[i].buttonToggleValueFalse,
+                                readOnly: myMdwHelper.getBooleanFromData(jsonData[i].readOnly, false),
                                 showValueLabel: myMdwHelper.getBooleanFromData(jsonData[i].showValueLabel, true),
                                 valueAppendix: myMdwHelper.getValueFromData(jsonData[i].valueAppendix, ""),
                                 background: myMdwHelper.getValueFromData(jsonData[i].background, myMdwHelper.getValueFromData(data.itemBackgroundColor, '')),
@@ -687,8 +849,13 @@ vis.binds.materialdesign.iconlist =
                                 buttonBackgroundColor: myMdwHelper.getValueFromData(jsonData[i].buttonBackgroundColor, ''),
                                 buttonBackgroundActiveColor: myMdwHelper.getValueFromData(jsonData[i].buttonBackgroundActiveColor, myMdwHelper.getValueFromData(jsonData[i].buttonBackgroundColor, '')),
                                 statusBarColor: myMdwHelper.getValueFromData(jsonData[i].statusBarColor, undefined),
-                                statusBarText: myMdwHelper.getValueFromData(jsonData[i].statusBarText, ''),
-                                lockEnabled: myMdwHelper.getBooleanFromData(jsonData[i].lockEnabled, false)
+                                statusBarColorActive: myMdwHelper.getValueFromData(jsonData[i].statusBarColorActive, myMdwHelper.getValueFromData(jsonData[i].statusBarColor, undefined)),
+                                statusBarText: myMdwHelper.getValueFromData(jsonData[i].statusBarText, undefined),
+                                statusBarTextActive: myMdwHelper.getValueFromData(jsonData[i].statusBarTextActive, myMdwHelper.getValueFromData(jsonData[i].statusBarText, undefined)),
+                                lockEnabled: myMdwHelper.getBooleanFromData(jsonData[i].lockEnabled, false),
+                                visibilityOid: myMdwHelper.getValueFromData(jsonData[i].visibilityOid, ''),
+                                visibilityCondition: myMdwHelper.getValueFromData(jsonData[i].visibilityCondition, ''),
+                                visibilityConditionValue: myMdwHelper.getValueFromData(jsonData[i].visibilityConditionValue, ''),
                             };
                         } else {
                             return undefined

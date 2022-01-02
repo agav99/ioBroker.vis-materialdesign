@@ -36,66 +36,61 @@ vis.binds.materialdesign.button = {
             default: 'toggle_default',
             vertical: 'toggle_vertical',
             icon: 'toggle_icon'
+        },
+        slider: {
+            icon: 'slider_icon'
         }
     },
     initialize: function (el, data, type) {
         let widgetName = 'Button';
-        let themeTriggerClass = '.materialdesign-widget.materialdesign-button'
 
         if (type.includes('icon')) {
             widgetName = 'Icon Button';
-            themeTriggerClass = '.materialdesign-widget.materialdesign-icon-button'
         }
 
         try {
             let $this = $(el);
             let containerClass = 'materialdesign-button-body';
 
-            myMdwHelper.subscribeThemesAtRuntimee(data, widgetName, themeTriggerClass, function () {
-                init();
+            myMdwHelper.subscribeThemesAtRuntime(data, widgetName);
+
+            vis.binds.materialdesign.button.useTheme(el, data, type, widgetName);
+
+            $this.addClass(data.buttonStyle !== 'text' ? 'materialdesign-button--' + data.buttonStyle : '');
+
+            if (type.includes('vertical')) {
+                $this.append(vis.binds.materialdesign.button.initializeVerticalButton($this, data, type));
+            } else if (type.includes('default')) {
+                $this.append(vis.binds.materialdesign.button.initializeButton($this, data, type));
+            } else if (type.includes('icon')) {
+                $this.append(vis.binds.materialdesign.button.initializeButton($this, data, type, true));
+            }
+
+            myMdwHelper.waitForElement($this, `.${containerClass}`, data.wid, widgetName, function () {
+                if (type.includes('navigation')) {
+                    vis.binds.materialdesign.button.handleNavigation(el, data, type.includes('icon'));
+                } else if (type.includes('link')) {
+                    vis.binds.materialdesign.button.handleLink(el, data, type.includes('icon'));
+                } else if (type.includes('state')) {
+                    vis.binds.materialdesign.button.handleState(el, data, false, type.includes('icon'));
+                } else if (type.includes('multiState')) {
+                    vis.binds.materialdesign.button.handleState(el, data, true, type.includes('icon'));
+                } else if (type.includes('addition')) {
+                    vis.binds.materialdesign.button.handleAddition(el, data, type.includes('icon'));
+                } else if (type.includes('toggle')) {
+                    vis.binds.materialdesign.button.handleToggle(el, data, type.includes('icon'));
+                } else if (type.includes('slider')) {
+                    vis.binds.materialdesign.button.handleToggle(el, data, type.includes('icon'), true);
+                }
             });
 
-            function init() {
-                vis.binds.materialdesign.button.useTheme(el, data, type, widgetName, themeTriggerClass);
-
-                $this.addClass(data.buttonStyle !== 'text' ? 'materialdesign-button--' + data.buttonStyle : '');
-
-                if (type.includes('vertical')) {
-                    $this.append(vis.binds.materialdesign.button.initializeVerticalButton($this, data));
-                } else if (type.includes('default')) {
-                    $this.append(vis.binds.materialdesign.button.initializeButton($this, data));
-                } else if (type.includes('icon')) {
-                    $this.append(vis.binds.materialdesign.button.initializeButton($this, data, true));
-                }
-
-                myMdwHelper.waitForElement($this, `.${containerClass}`, data.wid, widgetName, function () {
-                    if (type.includes('navigation')) {
-                        vis.binds.materialdesign.button.handleNavigation(el, data, type.includes('icon'));
-                    } else if (type.includes('link')) {
-                        vis.binds.materialdesign.button.handleLink(el, data, type.includes('icon'));
-                    } else if (type.includes('state')) {
-                        vis.binds.materialdesign.button.handleState(el, data, false, type.includes('icon'));
-                    } else if (type.includes('multiState')) {
-                        vis.binds.materialdesign.button.handleState(el, data, true, type.includes('icon'));
-                    } else if (type.includes('addition')) {
-                        vis.binds.materialdesign.button.handleAddition(el, data, type.includes('icon'));
-                    } else if (type.includes('toggle')) {
-                        vis.binds.materialdesign.button.handleToggle(el, data, type.includes('icon'));
-                    }
-                });
-            }
         } catch (ex) {
             console.error(`[${widgetName} ${type} - ${data.wid}] initialize: error: ${ex.message}, stack: ${ex.stack}`);
         }
     },
-    initializeButton: function ($this, data, isIconButton = false) {
+    initializeButton: function ($this, data, type, isIconButton = false) {
         try {
             let buttonElementsList = [];
-
-            let labelWidth = '';
-            if (myMdwHelper.getValueFromData(data.labelWidth, 0) > 0) {
-                labelWidth = `style="width: ${data.labelWidth}%;"`
-            }
 
             $this.attr('isLocked', myMdwHelper.getBooleanFromData(data.lockEnabled, false));
 
@@ -124,9 +119,25 @@ vis.binds.materialdesign.button = {
             let labelElement = '';
             if (myMdwHelper.getValueFromData(data.buttontext, null) != null && !isIconButton) {
                 labelElement = `<span 
-                                    class="materialdesign-button__label" ${labelWidth}>
+                                    class="materialdesign-button__label" style="${myMdwHelper.getValueFromData(data.labelWidth, 0) > 0 ? `width: ${data.labelWidth}%;` : ''} color: ${myMdwHelper.getValueFromData(data.labelColorFalse, '')};">
                                     ${data.buttontext}
                                 </span>`;
+            }
+
+            if (type.includes('toggle')) {
+                var val = vis.states.attr(data.oid + '.val');
+
+                if (vis.binds.materialdesign.button.getToggleState(val, data)) {
+                    imageElement = myMdwHelper.getIconElement(myMdwHelper.getValueFromData(data.imageTrue, myMdwHelper.getValueFromData(data.image, '')), 'auto', myMdwHelper.getValueFromData(data.iconHeight, 'auto', '', 'px'), myMdwHelper.getValueFromData(data.imageTrueColor, myMdwHelper.getValueFromData(data.imageColor, '')));
+                    $this.css('background', myMdwHelper.getValueFromData(data.colorBgTrue, myMdwHelper.getValueFromData(data.colorBgFalse, '')));
+
+                    if (myMdwHelper.getValueFromData(data.buttontext, null) != null && !isIconButton) {
+                        labelElement = `<span 
+                                            class="materialdesign-button__label" style="${myMdwHelper.getValueFromData(data.labelWidth, 0) > 0 ? `width: ${data.labelWidth}%;` : ''} color: ${myMdwHelper.getValueFromData(data.labelColorTrue, myMdwHelper.getValueFromData(data.labelColorFalse, ''))};">
+                                            ${data.buttontext}
+                                        </span>`;
+                    }
+                }
             }
 
             if (data.iconPosition === 'left') {
@@ -140,7 +151,7 @@ vis.binds.materialdesign.button = {
             console.error(`[Button - ${data.wid}] initialize: error: ${ex.message}, stack: ${ex.stack}`);
         }
     },
-    initializeVerticalButton: function ($this, data) {
+    initializeVerticalButton: function ($this, data, type) {
         try {
             let buttonElementsList = [];
 
@@ -161,9 +172,22 @@ vis.binds.materialdesign.button = {
             let labelElement = '';
             if (myMdwHelper.getValueFromData(data.buttontext, null) != null) {
                 labelElement = `<span 
-                                    class="materialdesign-button__label" style="text-align: center;">
+                                    class="materialdesign-button__label" style="text-align: center; color: ${myMdwHelper.getValueFromData(data.labelColorFalse, '')};">
                                     ${data.buttontext}
                                 </span>`;
+            }
+
+            if (type.includes('toggle')) {
+                var val = vis.states.attr(data.oid + '.val');
+
+                if (vis.binds.materialdesign.button.getToggleState(val, data)) {
+                    imageElement = myMdwHelper.getIconElement(myMdwHelper.getValueFromData(data.imageTrue, myMdwHelper.getValueFromData(data.image, '')), 'auto', myMdwHelper.getValueFromData(data.iconHeight, 'auto', '', 'px'), myMdwHelper.getValueFromData(data.imageTrueColor, myMdwHelper.getValueFromData(data.imageColor, '')));
+                    $this.css('background', myMdwHelper.getValueFromData(data.colorBgTrue, myMdwHelper.getValueFromData(data.colorBgFalse, '')));
+                    labelElement = `<span 
+                                        class="materialdesign-button__label" style="text-align: center; color: ${myMdwHelper.getValueFromData(data.labelColorTrue, myMdwHelper.getValueFromData(data.labelColorFalse, ''))};">
+                                        ${data.buttontext}
+                                    </span>`;
+                }
             }
 
             if (data.iconPosition === 'top') {
@@ -186,7 +210,6 @@ vis.binds.materialdesign.button = {
             $this.on('click', function (e) {
                 // Protect against two events
                 event.preventDefault();
-                vis.binds.materialdesign.helper.vibrate(data.vibrateOnMobilDevices);
 
                 if (!vis.editMode && data.href) {
                     if (data.openNewWindow) {
@@ -195,6 +218,10 @@ vis.binds.materialdesign.button = {
                         window.location.href = data.href;
                     }
                 }
+            });
+
+            $this.on('tapstart', function (e) {
+                myMdwHelper.hapticFeedback(data);
             });
         } catch (ex) {
             console.error(`[Button - ${data.wid}] handleLink: error: ${ex.message}, stack: ${ex.stack}`);
@@ -209,7 +236,6 @@ vis.binds.materialdesign.button = {
                 $this.on('click', function (e) {
                     // Protect against two events
                     event.preventDefault();
-                    vis.binds.materialdesign.helper.vibrate(data.vibrateOnMobilDevices);
 
                     if (moved) return;
                     vis.changeView(data.nav_view, data.nav_view);
@@ -219,6 +245,10 @@ vis.binds.materialdesign.button = {
                     moved = true;
                 }).on('touchstart', function (e) {
                     moved = false;
+                });
+
+                $this.on('tapstart', function (e) {
+                    myMdwHelper.hapticFeedback(data);
                 });
             }
         } catch (ex) {
@@ -232,12 +262,15 @@ vis.binds.materialdesign.button = {
             $this.on('click', function (e) {
                 // Protect against two events
                 event.preventDefault();
-                vis.binds.materialdesign.helper.vibrate(data.vibrateOnMobilDevices);
 
                 let val = vis.states.attr(data.oid + '.val');
                 if (!data.minmax || val != data.minmax) {
                     myMdwHelper.setValue(data.oid, parseFloat(val) + parseFloat(data.value));
                 }
+            });
+
+            $this.on('tapstart', function (e) {
+                myMdwHelper.hapticFeedback(data);
             });
         } catch (ex) {
             console.error(`[Button - ${data.wid}] handleAddition: error:: ${ex.message}, stack: ${ex.stack}`);
@@ -260,6 +293,12 @@ vis.binds.materialdesign.button = {
                 vis.states.bind(data.oid + '.val', function (e, newVal, oldVal) {
                     setLayout(newVal);
                 });
+
+                $(document).on("mdwSubscribe", function (e, oids) {
+                    if (myMdwHelper.isLayoutRefreshNeeded('Button', data, oids, data.debug)) {
+                        setLayout(vis.states.attr(data.oid + '.val'));
+                    }
+                });
             }
 
             if (!vis.editMode) {
@@ -267,12 +306,10 @@ vis.binds.materialdesign.button = {
                 $this.on('click', function (e) {
                     // Protect against two events
                     event.preventDefault();
-                    vis.binds.materialdesign.helper.vibrate(data.vibrateOnMobilDevices);
 
                     if (moved) return;
 
                     if ($this.attr('isLocked') === 'false' || $this.attr('isLocked') === undefined) {
-                        var oid = data.oid;
                         if (!isMulti) {
                             setValue(data.oid, data.value);
                             setLayout(formatInputValue(data.value));
@@ -293,6 +330,10 @@ vis.binds.materialdesign.button = {
                     moved = true;
                 }).on('touchstart', function (e) {
                     moved = false;
+                });
+
+                $this.on('tapstart', function (e) {
+                    myMdwHelper.hapticFeedback(data);
                 });
 
                 function unlockButton() {
@@ -352,9 +393,13 @@ vis.binds.materialdesign.button = {
             console.error(`[Button - ${data.wid}] handleState: error:: ${ex.message}, stack: ${ex.stack}`);
         }
     },
-    handleToggle: function (el, data, isIconButton = false) {
+    handleToggle: function (el, data, isIconButton = false, hasSlider = false) {
         try {
             var $this = $(el);
+
+            let $scalaInput;
+            let $knobDiv;
+            let $linkedValueWidget;
 
             if ($this.attr('isLocked') === 'true') {
                 $this.find('.materialdesign-button-body').css('filter', `grayscale(${myMdwHelper.getNumberFromData(data.lockFilterGrayscale, 0)}%)`);
@@ -363,14 +408,16 @@ vis.binds.materialdesign.button = {
             let bgColor = myMdwHelper.getValueFromData(data.colorBgFalse, '');
             let bgColorTrue = myMdwHelper.getValueFromData(data.colorBgTrue, bgColor);
 
-            let labelBgColor = myMdwHelper.getValueFromData(data.labelColorBgFalse, '');
-            let labelBgColorTrue = myMdwHelper.getValueFromData(data.labelColorBgTrue, labelBgColor);
-
             let textFalse = myMdwHelper.getValueFromData(data.buttontext, '');
             let textTrue = myMdwHelper.getValueFromData(data.labelTrue, textFalse);
 
             let textColorFalse = myMdwHelper.getValueFromData(data.labelColorFalse, '');
             let textColorTrue = myMdwHelper.getValueFromData(data.labelColorTrue, textColorFalse);
+
+            if (hasSlider) {
+                data.toggleType = "value";
+                intializeSlider();
+            }
 
             setButtonState();
 
@@ -379,33 +426,43 @@ vis.binds.materialdesign.button = {
             }
 
             vis.states.bind(data.oid + '.val', function (e, newVal, oldVal) {
-                setButtonState();
+                setButtonState(newVal);
             });
 
             if (!vis.editMode) {
                 if (myMdwHelper.getBooleanFromData(data.pushButton, false) === false) {
-                    $this.on('click', function (e) {
-                        // Protect against two events
-                        event.preventDefault();
-                        vis.binds.materialdesign.helper.vibrate(data.vibrateOnMobilDevices);
 
-                        if ($this.attr('isLocked') === 'false' || $this.attr('isLocked') === false || $this.attr('isLocked') === undefined) {
-                            if (myMdwHelper.getValueFromData(data.toggleType, 'boolean') === 'boolean') {
-                                myMdwHelper.setValue(data.oid, !vis.states.attr(data.oid + '.val'));
-                            } else {
-                                if ($this.attr('toggled') === true || $this.attr('toggled') === 'true') {
-                                    myMdwHelper.setValue(data.oid, data.valueOff);
+                    if (!hasSlider) {
+                        $this.on('click', function (e) {
+                            // Protect against two events
+                            e.preventDefault();
+
+                            if ($this.attr('isLocked') === 'false' || $this.attr('isLocked') === false || $this.attr('isLocked') === undefined) {
+                                if (myMdwHelper.getValueFromData(data.toggleType, 'boolean') === 'boolean') {
+                                    myMdwHelper.setValue(data.oid, !vis.states.attr(data.oid + '.val'));
                                 } else {
-                                    myMdwHelper.setValue(data.oid, data.valueOn);
+                                    if ($this.attr('toggled') === true || $this.attr('toggled') === 'true') {
+                                        myMdwHelper.setValue(data.oid, data.valueOff);
+                                    } else {
+                                        myMdwHelper.setValue(data.oid, data.valueOn);
+                                    }
                                 }
+                            } else {
+                                unlockButton();
                             }
-                        } else {
-                            unlockButton();
-                        }
-                    });
+                        });
+
+                        $this.on('tapstart', function (e) {
+                            myMdwHelper.hapticFeedback(data);
+                        });
+                    } else {
+                        sliderEvents();
+                    }
                 } else {
                     // Button from type push (Taster)                   
                     $this.on('mousedown touchstart', function (e) {
+                        myMdwHelper.hapticFeedback(data);
+
                         if ($this.attr('isLocked') === 'false' || $this.attr('isLocked') === false || $this.attr('isLocked') === undefined) {
                             if (data.toggleType === 'boolean') {
                                 myMdwHelper.setValue(data.oid, true);
@@ -431,26 +488,12 @@ vis.binds.materialdesign.button = {
                 }
             }
 
-            function setButtonState() {
-                var val = vis.states.attr(data.oid + '.val');
-
-                let buttonState = false;
-
-                if (data.toggleType === 'boolean') {
-                    buttonState = val;
-                } else {
-                    if (!isNaN(val) && !isNaN(data.valueOn)) {
-                        if (parseFloat(val) === parseFloat(data.valueOn)) {
-                            buttonState = true;
-                        } else if (parseFloat(val) !== parseFloat(data.valueOn) && parseFloat(val) !== parseFloat(data.valueOff) && data.stateIfNotTrueValue === 'on') {
-                            buttonState = true;
-                        }
-                    } else if (val === parseInt(data.valueOn) || val === data.valueOn) {
-                        buttonState = true;
-                    } else if (val !== parseInt(data.valueOn) && val !== data.valueOn && val !== parseInt(data.valueOff) && val !== data.valueOff && data.stateIfNotTrueValue === 'on') {
-                        buttonState = true;
-                    }
+            function setButtonState(val) {
+                if (!val || val === null) {
+                    val = vis.states.attr(data.oid + '.val');
                 }
+
+                let buttonState = vis.binds.materialdesign.button.getToggleState(val, data);
 
                 if (buttonState) {
                     $this.attr('toggled', true);
@@ -464,7 +507,6 @@ vis.binds.materialdesign.button = {
                     myMdwHelper.changeIconElement($this, myMdwHelper.getValueFromData(data.imageTrue, myMdwHelper.getValueFromData(data.image, '')), 'auto', myMdwHelper.getValueFromData(data.iconHeight, 'auto', '', 'px'), myMdwHelper.getValueFromData(data.imageTrueColor, myMdwHelper.getValueFromData(data.imageColor, '')));
 
                     $this.find('.materialdesign-button__label').html(textTrue).css('color', textColorTrue);
-                    $this.find('.labelRowContainer').css('background', labelBgColorTrue);
                 } else {
                     $this.attr('toggled', false);
 
@@ -477,7 +519,11 @@ vis.binds.materialdesign.button = {
                     myMdwHelper.changeIconElement($this, data.image, 'auto', myMdwHelper.getValueFromData(data.iconHeight, 'auto', '', 'px'), myMdwHelper.getValueFromData(data.imageColor, ''));
 
                     $this.find('.materialdesign-button__label').html(textFalse).css('color', textColorFalse);
-                    $this.find('.labelRowContainer').css('background', labelBgColor);
+                }
+
+                if (hasSlider) {
+                    sliderSetValue(val, false);
+                    setLinkedValueWidgetState(val);
                 }
             }
 
@@ -492,25 +538,318 @@ vis.binds.materialdesign.button = {
                     $this.find('.materialdesign-button-body').css('filter', `grayscale(${myMdwHelper.getNumberFromData(data.lockFilterGrayscale, 0)}%)`);
                 }, myMdwHelper.getNumberFromData(data.autoLockAfter, 10) * 1000);
             }
+
+            function intializeSlider() {
+                $this.css('overflow', 'visible');
+                // $this.css('padding', 0);
+                $this.find('.materialdesign-button-body').css('position', 'relative');
+
+                var divW = parseInt(window.getComputedStyle($this.get(0), null).width.replace('px', ''));
+                var divH = parseInt(window.getComputedStyle($this.get(0), null).height.replace('px', ''));
+                var divMax = ((divW > divH) ? divW : divH);
+
+                // calculate thickness
+                let sliderwith = Math.round(divMax + myMdwHelper.getNumberFromData(data.sliderWidth, 20)) + '';
+                let optThickness = 1 - (divMax / sliderwith);
+
+                if (data.showInFront) {
+                    sliderwith = Math.round(divMax - myMdwHelper.getNumberFromData(data.sliderWidth, 0)) + '';
+                    optThickness = 0.15;
+
+                    if (sliderwith <= 0) {
+                        sliderwith = 1;
+                    }
+                }
+
+                let thickness = myMdwHelper.getNumberFromData(data.sliderThikness, undefined) ? data.sliderThikness : optThickness;
+
+                let sliderElement = `
+                <div class="materialdesign-icon-button-slider-container" style="position: absolute; left: calc(50% - ${sliderwith}px / 2); top: calc(50% - ${sliderwith}px / 2);">
+                    <input type="text" class="scalaInput" value="66" data-width="${sliderwith}" data-height="${sliderwith}" data-thickness="${thickness}" 
+                        style="width: 0px;
+                        height: 0px;
+                        display: hidden;
+                        background: rgba(0, 0, 0, 0) none repeat scroll 0% 0%;">
+                </div>`
+
+                if (!data.showInFront) {
+                    $this.prepend(sliderElement);
+                    $this.find('.materialdesign-button-body').css('pointer-events', 'none !important');
+                } else {
+                    $this.find('.materialdesign-button-body').append(sliderElement);
+                }
+
+                $scalaInput = $this.find('.scalaInput');
+                let dataMax = myMdwHelper.getNumberFromData(data.valueOn, 100);
+                let dataMin = myMdwHelper.getNumberFromData(data.valueOff, 0);
+
+                let knobObj = {
+                    displayInput: false,
+                    min: dataMin,
+                    max: dataMax,
+                    step: 1,
+                    fgColor: myMdwHelper.getValueFromData(data.foregroundColor, "#44739e"),
+                    bgColor: myMdwHelper.getValueFromData(data.backgroundColor, "#eeeeee"),
+                    relative: true,
+                    angleOffset: myMdwHelper.getNumberFromData(data.angleOffset, 0),
+                    angleArc: myMdwHelper.getNumberFromData(data.angleArc, 360),
+                    change: function (value) {
+                        if (vis.editMode) {
+                            return false;
+                        }
+
+                        if (!($this.attr('isLocked') === 'false' || $this.attr('isLocked') === false || $this.attr('isLocked') === undefined)) {
+                            return false;
+                        }
+
+                        setLinkedValueWidgetState(value);
+                    }
+                }
+
+                if (data.colorize) {
+                    knobObj.colorize = function (color, value) {
+                        return getColors(color, value, dataMin, dataMax, myMdwHelper.getNumberFromData(data.colorizeFactor, 0.5));
+                    }
+                }
+
+                $knobDiv = $scalaInput.knobHQ(knobObj);
+
+                if (myMdwHelper.getBooleanFromData(data.enable, false) && myMdwHelper.getValueFromData(data.widgetId)) {
+                    myMdwHelper.waitForElement($('#vis_container'), `#${data.widgetId}`, data.widgetId, 'Value - Linked', function (element) {
+                        $linkedValueWidget = element;
+                    }, 0, data.debug);
+                }
+            }
+
+            function sliderEvents() {
+                if (!vis.editMode) {
+                    $knobDiv._click = false;
+                    $knobDiv._mousedown = false;
+
+                    $this.on('mouseenter', function (e) {
+                        e.preventDefault();
+
+                        if (!$knobDiv._mousedown) {
+                            sliderShow();
+                        }
+                    });
+
+                    $this.on('mouseleave', function (e) {
+                        e.preventDefault();
+
+                        if (!$knobDiv._mousedown) {
+                            sliderHide();
+                        }
+                    });
+
+                    $this.on('tap', function (e) {
+                        e.preventDefault();
+
+                        $knobDiv._click = true;
+                        $knobDiv._mousedown = false;
+                    });
+
+                    $this.on('tapstart', function (e) {
+                        e.preventDefault();
+
+                        myMdwHelper.hapticFeedback(data);
+
+                        $knobDiv._mousedown = true;
+                        $knobDiv._click = false;
+
+                        sliderShow();
+                        linkedValueWidgetShow();
+                    });
+
+                    $this.on('touchstart', function (e) {
+                        if ($knobDiv._mousedown) {
+                            if (e.simulated) {
+                                e.preventDefault();
+                                return;
+                            }
+
+                            e.simulated = true;
+                            $knobDiv.find('canvas').trigger(e);
+                            e.preventDefault();
+                        }
+                    }).on('mousedown', function (e) {
+                        if ($knobDiv._mousedown) {
+                            if (e.simulated) {
+                                e.preventDefault();
+                                return;
+                            }
+
+                            e.simulated = true;
+                            $knobDiv.find('canvas').trigger(e);
+                            e.preventDefault();
+                        }
+                    });
+
+                    $('body').on('tapend', function (e) {
+                        if ($knobDiv._click) {
+                            if (!data.sliderOnly) {
+                                if ($this.attr('isLocked') === 'false' || $this.attr('isLocked') === false || $this.attr('isLocked') === undefined) {
+                                    if ($this.attr('toggled') === true || $this.attr('toggled') === 'true') {
+                                        let dataVal = myMdwHelper.getNumberFromData(data.valueOff, 100);
+                                        myMdwHelper.setValue(data.oid, dataVal);
+                                        sliderSetValue(dataVal);
+                                    } else {
+                                        let dataVal = myMdwHelper.getNumberFromData(data.valueOn, 100);
+                                        myMdwHelper.setValue(data.oid, dataVal);
+                                        sliderSetValue(dataVal);
+                                    }
+                                } else {
+                                    unlockButton();
+                                }
+                                sliderHide();
+                                linkedValueWidgetHide();
+                            }
+                        } else {
+                            if ($knobDiv._mousedown) {
+                                myMdwHelper.hapticFeedback(data);
+
+                                if ($this.attr('isLocked') === 'false' || $this.attr('isLocked') === false || $this.attr('isLocked') === undefined) {
+                                    myMdwHelper.setValue(data.oid, $scalaInput.val());
+                                }
+                                sliderHide();
+                                linkedValueWidgetHide();
+                            }
+                        }
+
+                        $knobDiv._click = false;
+                        $knobDiv._mousedown = false;
+                    });
+
+                    sliderHide();
+                }
+            }
+
+            function sliderSetValue(val, setByUser = true) {
+                if (val || val === 0) {
+                    $scalaInput.data('setByUser', setByUser);
+                    $scalaInput.val(val).trigger('change');
+                }
+            }
+
+            function sliderShow() {
+                if (!data.showAlways) {
+                    $knobDiv.show();
+                }
+            }
+
+            function sliderHide() {
+                if (!data.showAlways) {
+                    setTimeout(function () {
+                        $knobDiv.hide();
+                    }, 150);
+                }
+            }
+
+            function linkedValueWidgetShow() {
+                if ($linkedValueWidget && $linkedValueWidget.length === 1) {
+
+                    if (myMdwHelper.getValueFromData(data.prepandText, undefined)) {
+                        $linkedValueWidget.find('.prepand-text').html(data.prepandText);
+                    }
+
+                    if (myMdwHelper.getValueFromData(data.appendText, undefined)) {
+                        $linkedValueWidget.find('.append-text').html(data.appendText);
+                    }
+
+                    if (myMdwHelper.getValueFromData(data.imageValueWidgetLink, undefined)) {
+                        let iconElement = $linkedValueWidget.find('.materialdesign-value-icon .mdi')
+
+                        iconElement.attr('class', function (i, c) {
+                            return c.replace(/(^|\s)mdi-\S+/, ` mdi-${data.imageValueWidgetLink}`);
+                        });
+
+                        if (myMdwHelper.getValueFromData(data.imageColorValueWidgetLink, undefined)) {
+                            iconElement.css('color', data.imageColorValueWidgetLink);
+                        }
+                    }
+
+                    $linkedValueWidget.show();
+                }
+            }
+
+            function linkedValueWidgetHide() {
+                if ($linkedValueWidget && $linkedValueWidget.length === 1) {
+                    setTimeout(function () {
+                        $linkedValueWidget.hide();
+                    }, 300);
+                }
+            }
+
+            function setLinkedValueWidgetState(val) {
+                if ($linkedValueWidget && $linkedValueWidget.length === 1) {
+                    let formatedValue = myMdwHelper.formatNumber(val, 0, 0);
+                    let dataMax = myMdwHelper.getNumberFromData(data.valueOn, 100);
+                    let dataMin = myMdwHelper.getNumberFromData(data.valueOff, 0);
+
+                    if (formatedValue <= dataMin && myMdwHelper.getValueFromData(data.valueLabelMin, undefined)) {
+                        $linkedValueWidget.find('.value-text').html(data.valueLabelMin);
+                    } else if (formatedValue >= dataMax && myMdwHelper.getValueFromData(data.valueLabelMax, undefined)) {
+                        $linkedValueWidget.find('.value-text').html(data.valueLabelMax);
+                    } else {
+                        $linkedValueWidget.find('.value-text').html(`${formatedValue}${myMdwHelper.getValueFromData(data.unit, '')}`);
+                    }
+                }
+            }
+
+            function getColors(color, value, min, max, alpha) {
+                let myColors;
+                let ratio = (value - min) / (max - min);
+                alpha = ratio + alpha;
+
+                if (color.includes(';')) {
+                    myColors = chroma.scale(color.split(';'))
+
+                    return myColors(ratio).alpha(alpha).css();
+                } else {
+                    myColors = chroma(color);
+                    return myColors.alpha(alpha).css();
+                }
+            }
         } catch (ex) {
             console.error(`[Button - ${data.wid}] handleToggle: error:: ${ex.message}, stack: ${ex.stack}`);
         }
     },
-    useTheme: function (el, data, type, widgetName, themeTriggerClass) {
+    getToggleState(val, data) {
+        let buttonState = false;
+
+        if (data.toggleType === 'boolean') {
+            buttonState = val;
+        } else {
+            if (!isNaN(val) && !isNaN(data.valueOn)) {
+                if (parseFloat(val) === parseFloat(data.valueOn)) {
+                    buttonState = true;
+                } else if (parseFloat(val) !== parseFloat(data.valueOn) && parseFloat(val) !== parseFloat(data.valueOff) && data.stateIfNotTrueValue === 'on') {
+                    buttonState = true;
+                }
+            } else if (val === parseInt(data.valueOn) || val === data.valueOn) {
+                buttonState = true;
+            } else if (val !== parseInt(data.valueOn) && val !== data.valueOn && val !== parseInt(data.valueOff) && val !== data.valueOff && data.stateIfNotTrueValue === 'on') {
+                buttonState = true;
+            }
+        }
+
+        return buttonState;
+    },
+    useTheme: function (el, data, type, widgetName) {
         var $this = $(el);
         let btn = $this.parent().get(0) ? $this.parent().get(0) : $this.parent().context;
+
+        $(document).on("mdwSubscribe", function (e, oids) {
+            if (myMdwHelper.isLayoutRefreshNeeded(widgetName, data, oids, data.debug)) {
+                setLayout();
+            }
+        });
 
         vis.states.bind('vis-materialdesign.0.colors.darkTheme.val', function (e, newVal, oldVal) {
             setLayout();
         });
 
         vis.states.bind('vis-materialdesign.0.lastchange.val', function (e, newVal, oldVal) {
-            setLayout();
-        });
-
-        $(themeTriggerClass).on(`mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}`, function () {
-            if (data.debug) console.log(`[${widgetName} - ${data.wid}] event received: 'mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}'`);
-            // $(themeTriggerClass).off(`mdwTheme_subscribe_${widgetName.replace(/ /g, '_')}`);
             setLayout();
         });
 
@@ -526,11 +865,30 @@ vis.binds.materialdesign.button = {
             if (!type.includes('icon')) {
                 btn.style.setProperty("--materialdesign-color-button-pressed", myMdwHelper.getValueFromData(data.mdwButtonColorPress, ''));
             } else {
+                // icon Buttons
                 $this.css('background', myMdwHelper.getValueFromData(data.colorBgFalse, ''));
-                $this.find('.materialdesign-icon-image').css('color', myMdwHelper.getValueFromData(data.imageColor, '#44739e'));
+
+                if ($this.attr('toggled') && ($this.attr('toggled') === true || $this.attr('toggled') === 'true')) {
+                    $this.css('background', myMdwHelper.getValueFromData(data.colorBgTrue, myMdwHelper.getValueFromData(data.colorBgFalse, '')));
+                    $this.find('.materialdesign-icon-image').css('color', myMdwHelper.getValueFromData(data.imageTrueColor, myMdwHelper.getValueFromData(data.imageColor, '')));
+                } else {
+                    $this.find('.materialdesign-icon-image').css('color', myMdwHelper.getValueFromData(data.imageColor, '#44739e'));
+                    $this.css('background', myMdwHelper.getValueFromData(data.colorBgFalse, ''));
+                }
+
                 $this.find('.materialdesign-lock-icon').css('background', myMdwHelper.getValueFromData(data.lockIconBackground, '')).css('color', myMdwHelper.getValueFromData(data.lockIconColor, '#B22222'));
 
                 btn.style.setProperty("--materialdesign-color-icon-button-hover", myMdwHelper.getValueFromData(data.colorPress, ''));
+
+                if (type.includes('slider')) {
+                    $this.find('.scalaInput').trigger(
+                        'configure',
+                        {
+                            fgColor: myMdwHelper.getValueFromData(data.foregroundColor, "#44739e"),
+                            bgColor: myMdwHelper.getValueFromData(data.backgroundColor, "#eeeeee"),
+                        }
+                    );
+                }
             }
         }
     },
@@ -550,6 +908,8 @@ vis.binds.materialdesign.button = {
                 valueOn: obj.valueOn,
                 stateIfNotTrueValue: obj.stateIfNotTrueValue,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
 
                 // labeling
                 buttontext: obj.buttontext,
@@ -598,6 +958,8 @@ vis.binds.materialdesign.button = {
                 valueOn: obj.valueOn,
                 stateIfNotTrueValue: obj.stateIfNotTrueValue,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
 
                 // labeling
                 buttontext: obj.buttontext,
@@ -647,6 +1009,8 @@ vis.binds.materialdesign.button = {
                 valueOn: obj.valueOn,
                 stateIfNotTrueValue: obj.stateIfNotTrueValue,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
 
                 // icon
                 image: obj.image,
@@ -675,13 +1039,15 @@ vis.binds.materialdesign.button = {
         } else if (type === this.types.state.default) {
             return {
                 wid: widgetId,
-                debug: obj.debug,
 
                 // Common
                 oid: obj.oid,
                 buttonStyle: obj.buttonStyle,
                 value: obj.value,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
+                debug: obj.debug,
 
                 // labeling
                 buttontext: obj.buttontext,
@@ -693,6 +1059,7 @@ vis.binds.materialdesign.button = {
                 mdwButtonPrimaryColor: obj.mdwButtonPrimaryColor,
                 mdwButtonSecondaryColor: obj.mdwButtonSecondaryColor,
                 mdwButtonColorPress: obj.mdwButtonColorPress,
+                colorBgTrue: obj.colorBgTrue,
 
                 // icon
                 image: obj.image,
@@ -707,17 +1074,20 @@ vis.binds.materialdesign.button = {
                 lockIconSize: obj.lockIconSize,
                 lockIconColor: obj.lockIconColor,
                 lockFilterGrayscale: obj.lockFilterGrayscale
+
             }
         } else if (type === this.types.state.vertical) {
             return {
                 wid: widgetId,
-                debug: obj.debug,
 
                 // Common
                 oid: obj.oid,
                 buttonStyle: obj.buttonStyle,
                 value: obj.value,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
+                debug: obj.debug,
 
                 // labeling
                 buttontext: obj.buttontext,
@@ -730,6 +1100,7 @@ vis.binds.materialdesign.button = {
                 mdwButtonPrimaryColor: obj.mdwButtonPrimaryColor,
                 mdwButtonSecondaryColor: obj.mdwButtonSecondaryColor,
                 mdwButtonColorPress: obj.mdwButtonColorPress,
+                colorBgTrue: obj.colorBgTrue,
 
                 // icon
                 image: obj.image,
@@ -756,6 +1127,8 @@ vis.binds.materialdesign.button = {
                 oid: obj.oid,
                 value: obj.value,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
 
                 // icon
                 image: obj.image,
@@ -788,6 +1161,8 @@ vis.binds.materialdesign.button = {
                 href: obj.href,
                 openNewWindow: obj.openNewWindow,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
                 generateHtmlControl: obj.generateHtmlControl,
 
                 // labeling
@@ -817,6 +1192,8 @@ vis.binds.materialdesign.button = {
                 href: obj.href,
                 openNewWindow: obj.openNewWindow,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
 
                 // labeling
                 buttontext: obj.buttontext,
@@ -845,6 +1222,8 @@ vis.binds.materialdesign.button = {
                 href: obj.href,
                 openNewWindow: obj.openNewWindow,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
 
                 // icon
                 image: obj.image,
@@ -863,6 +1242,8 @@ vis.binds.materialdesign.button = {
                 buttonStyle: obj.buttonStyle,
                 nav_view: obj.nav_view,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
                 debug: obj.debug,
 
                 // labeling
@@ -891,6 +1272,8 @@ vis.binds.materialdesign.button = {
                 buttonStyle: obj.buttonStyle,
                 nav_view: obj.nav_view,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
                 debug: obj.debug,
 
                 // labeling
@@ -917,6 +1300,8 @@ vis.binds.materialdesign.button = {
                 // Common
                 nav_view: obj.nav_view,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
                 debug: obj.debug,
 
                 // icon
@@ -936,6 +1321,8 @@ vis.binds.materialdesign.button = {
                 countOids: obj.countOids,
                 buttonStyle: obj.buttonStyle,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
                 debug: obj.debug,
 
                 // labeling
@@ -983,6 +1370,8 @@ vis.binds.materialdesign.button = {
                 countOids: obj.countOids,
                 buttonStyle: obj.buttonStyle,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
                 debug: obj.debug,
 
                 // labeling
@@ -1026,6 +1415,8 @@ vis.binds.materialdesign.button = {
                 // Common
                 countOids: obj.countOids,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
                 debug: obj.debug,
 
                 // icon
@@ -1068,6 +1459,8 @@ vis.binds.materialdesign.button = {
                 value: obj.value,
                 minmax: obj.minmax,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
                 debug: obj.debug,
 
                 // labeling
@@ -1099,6 +1492,8 @@ vis.binds.materialdesign.button = {
                 value: obj.value,
                 minmax: obj.minmax,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
                 debug: obj.debug,
 
                 // labeling
@@ -1127,6 +1522,8 @@ vis.binds.materialdesign.button = {
                 value: obj.value,
                 minmax: obj.minmax,
                 vibrateOnMobilDevices: obj.vibrateOnMobilDevices,
+                clickSoundPlay: obj.clickSoundPlay,
+                clickSoundVolume: obj.clickSoundVolume,
                 debug: obj.debug,
 
                 // icon
@@ -1182,6 +1579,7 @@ vis.binds.materialdesign.button = {
 $.initialize(".materialdesign-button-html-element", function () {
     let $this = $(this);
     let type = $this.attr('mdw-type');
+    let debug = myMdwHelper.getBooleanFromData($this.attr('mdw-debug'), false);
     let parentId = 'unknown';
     let logPrefix = `[Button HTML Element - ${parentId.replace('w', 'p')} - ${type}]`;
 
@@ -1192,7 +1590,7 @@ $.initialize(".materialdesign-button-html-element", function () {
         parentId = myMdwHelper.getHtmlParentId($this);
         logPrefix = `[Button HTML Element - ${parentId.replace('w', 'p')} - ${type}]`;
 
-        console.log(`${logPrefix} initialize html element from type '${type}'`);
+        if (debug) console.log(`${logPrefix} initialize html element from type '${type}'`);
 
         myMdwHelper.extractHtmlWidgetData($this,
             vis.binds.materialdesign.button.getDataFromJson({}, `${parentId}`, vis.binds.materialdesign.button.types[typeSplitted[0]][typeSplitted[1]], $this.attr('mdw-countOids')),
