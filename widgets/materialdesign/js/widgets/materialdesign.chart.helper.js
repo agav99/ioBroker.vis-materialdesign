@@ -291,9 +291,13 @@ vis.binds.materialdesign.chart.helper = {
             }
             `);
     },
-    getTaskForHistoryData: function (index, data, dataRangeStartTime, debug = false) {
+    getTaskForHistoryData: function (index, data, dataRangeStartTime, dataRangeEndTime, debug = false) {
         return new Promise((resolve, reject) => {
             try {
+                if(!dataRangeEndTime){ //if not defined use currentTime
+                   dataRangeEndTime = new Date().getTime(); 
+                }    
+              
                 let id = data.attr('oid' + index);
                 let historyOptions = {
                     instance: data.historyAdapterInstance,
@@ -301,7 +305,7 @@ vis.binds.materialdesign.chart.helper = {
                     step: (vis.binds.materialdesign.chart.helper.getNumberFromData(data.attr('minTimeInterval' + index), undefined)) ? parseInt(data.attr('minTimeInterval' + index)) * 1000 : undefined,
                     aggregate: data.attr('aggregate' + index) || 'minmax',
                     start: dataRangeStartTime,
-                    end: new Date().getTime(),
+                    end: dataRangeEndTime,
                     timeout: parseInt(vis.binds.materialdesign.chart.helper.getNumberFromData(data.chartTimeout, 2)) * 1000
                 }
 

@@ -78,17 +78,29 @@ vis.binds.materialdesign.chart.lineHistory = function (el, data) {
 
 
                 let timeInterval = data.timeIntervalToShow;
-                let dataRangeStartTime = new Date().getTime() - myChartHelper.intervals[timeInterval];
+                let dataRangeEndTime = Date.now();  
+                let dataRangeStartTime = dataRangeEndTime - myChartHelper.intervals[timeInterval];
+                if (debug) console.log(`chart set interval range`);
+                
+                //range set by variable
                 if (myMdwHelper.getValueFromData(data.time_interval_oid, null) !== null) {
-                    let val = vis.states.attr(data.time_interval_oid + '.val');
+                   let val = vis.states.attr(data.time_interval_oid + '.val');  //check range variable type. Can bе enum string  or format string "Tb;Te"  or Number
 
-                    if (typeof (val) === 'string' && myChartHelper.intervals[val] !== undefined) {
-                        dataRangeStartTime = new Date().getTime() - myChartHelper.intervals[val]
-                        timeInterval = vis.states.attr(data.time_interval_oid + '.val');
-                    } else {
-                        dataRangeStartTime = val;
+                   if (typeof (val) === 'string') { //value data type  - STRING. value from enum or   format string "Tb;Te"
+   	            let arr=val.split(';')	
+                    if (arr.length==2){	
+                       dataRangeStartTime=Number(arr[0]);
+                       dataRangeEndTime=Number(arr[1]);
                     }
 
+                    if(myChartHelper.intervals[val] !== undefined){
+		        dataRangeStartTime = dataRangeEndTime - myChartHelper.intervals[val];
+	                timeInterval = vis.states.attr(data.time_interval_oid + '.val'); //????? unnecessary
+		       }
+                    } else {
+                        // value data type  - NUMBER
+                        dataRangeStartTime = val;
+                    }
                     vis.states.bind(data.time_interval_oid + '.val', onChange);
                 }
 
@@ -480,7 +492,8 @@ vis.binds.materialdesign.chart.lineHistory = function (el, data) {
                             progressBar.show();
 
                             let timeInterval = data.timeIntervalToShow;
-                            dataRangeStartTime = new Date().getTime() - myChartHelper.intervals[timeInterval];
+                            let dataRangeEndTime = Date.now();   
+                            dataRangeStartTime = dataRangeEndTime - myChartHelper.intervals[timeInterval];
 
                             if (myMdwHelper.getValueFromData(data.time_interval_oid, null) !== null) {
                                 let val = vis.states.attr(data.time_interval_oid + '.val');
@@ -490,9 +503,17 @@ vis.binds.materialdesign.chart.lineHistory = function (el, data) {
                                     if (debug) console.log(`[${widgetName} ${data.wid}] time interval changed by '${data.time_interval_oid}' to: ${val}`);
                                 }
 
-                                if (typeof (val) === 'string' && myChartHelper.intervals[val] !== undefined) {
-                                    dataRangeStartTime = new Date().getTime() - myChartHelper.intervals[val]
-                                    timeInterval = vis.states.attr(data.time_interval_oid + '.val');
+                                    //Value is string or number
+                                   if (typeof (val) === 'string' ) {
+                                         let arr=val.split(';')	
+                                         if (arr.length==2){	
+                                               dataRangeStartTime=Number(arr[0]);
+                                               dataRangeEndTime=Number(arr[1]);
+                                         }
+                                         if(myChartHelper.intervals[val] !== undefined){
+                                             dataRangeStartTime = dataRangeEndTime - myChartHelper.intervals[val];
+                                             timeInterval = vis.states.attr(data.time_interval_oid + '.val'); //notUsed
+                                         }
                                 } else {
                                     dataRangeStartTime = val;
                                 }
@@ -501,7 +522,7 @@ vis.binds.materialdesign.chart.lineHistory = function (el, data) {
                             let operations = [];
                             for (var i = 0; i <= data.dataCount; i++) {
                                 if (myMdwHelper.getValueFromData(data.attr('oid' + i), null) !== null) {
-                                    operations.push(myChartHelper.getTaskForHistoryData(i, data, dataRangeStartTime, debug))
+                                   operations.push(myChartHelper.getTaskForHistoryData(i, data, dataRangeStartTime, dataRangeEndTime, debug))
                                 }
                             }
 
