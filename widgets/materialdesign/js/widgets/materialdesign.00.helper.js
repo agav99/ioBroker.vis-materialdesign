@@ -539,7 +539,7 @@ vis.binds.materialdesign.helper = {
         }
 
         if (vis.widgets[wid])
-          return widgets[wid].modelViewId;
+          return vis.widgets[wid].modelViewId;
 
         return undefined;
     },
