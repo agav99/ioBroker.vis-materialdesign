@@ -537,11 +537,16 @@ vis.binds.materialdesign.helper = {
                 return view;
             }
         }
+
+        if (vis.widgets[wid])
+          return widgets[wid].modelViewId;
+
+        return undefined;
     },
     oidNeedSubscribe(oid, wid, widgetName, oidNeedSubscribe, isBinding = false, debug = false, force = false) {
         let view = vis.binds.materialdesign.helper.getViewOfWidget(wid);
 
-        if (oid !== undefined) {
+        if (view && (oid !== undefined)) {
             // Check if Oid is subscribed and put to vis subscribing object
             if (!vis.editMode) {
 
@@ -584,7 +589,7 @@ vis.binds.materialdesign.helper = {
 
                 let view = vis.binds.materialdesign.helper.getViewOfWidget(wid);
 
-                if (vis.bindings.hasOwnProperty(bindings[b].systemOid) === false) {
+                if (view && (vis.bindings.hasOwnProperty(bindings[b].systemOid) === false)) {
                     result.oidNeedSubscribe = vis.binds.materialdesign.helper.oidNeedSubscribe(bindings[b].systemOid, wid, widgetName, oidNeedSubscribe, true);
 
                     vis.bindings[[bindings[b].systemOid]] = [{

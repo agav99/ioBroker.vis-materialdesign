@@ -1075,6 +1075,7 @@ vis.binds.materialdesign.viseditor = {
             view = null;
         }
         if (!view || !vis.views[view]) view = vis.getViewOfWidget(widget);
+        if (!view) return undefined;
         var widgetData = vis.views[view].widgets[widget];
         if (widgetData) {
             return $('#' + widgetData.tpl).attr('data-vis-name');
